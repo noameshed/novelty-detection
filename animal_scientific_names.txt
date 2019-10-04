@@ -1,0 +1,275 @@
+Mammals
+Common Name	Scientific Name
+antelope, prong-horned	Antilocapra americana (Ord)
+badger	Taxidea taxus (Shreber)
+bats *	
+free-tailed	Tadarida spp (3)
+mastif	Eumops spp (2)
+plain-nosed	Myotis spp (9)
+bear, black	Euarctos americanus (Pallas)
+beaver	Castor canadensis Kuhle
+bobcat	Lynx rufus (Shreber)
+chipmunk	Eutamias spp (4)
+coati (or coatimundi)	Nasua narica (Linnaeus)
+coyote	Canis latrans Say
+deer	
+mule (or black-tailed)	Odocoileus hemionus (Rafinesque)
+white-tailed (or eastern)	O. virginianus (Zimmermann)
+elk	Cervus canadensis (Erxleben)
+fox	
+gray	Urocyon cinereoargenteus (Shreber)
+Kit	Vulpes macrotis Merriam
+gopher, pocket	Thomomys spp (3)
+javelina	Pecari tajacu (Linnaeus)
+mountain lion	Felis concolor Linnaeus
+mouse (most common)	
+cactus	Peromyscus eremicus (Baird)
+pinyon	P. truei (Shufeldt) **
+pocket	Perognathus spp (10)
+muskrat	Ondatra zibethica (Linnaeus)
+otter, river	Lutra canadensis (Shreber)
+prairie dog, Gunnison's	Cynomys gunnisoni
+porcupine	Erethizon dorsatum Linnaeus
+rabbit	
+cottontail	Sylvilagus spp (3)
+jack	Lepus spp (2)
+raccoon	Procyon lotor (Linnaeus)
+rat	
+kangaroo	Dipodomys spp (5)
+pack	Neotoma albigula Hartley
+wood	Neotoma spp (4)
+ringtail	Bassariscus astutus (Lichenstein)
+sheep, bighorn	Ovis canadensis Shaw
+shrew	
+desert	Notiosorex crawfordi (Coues)
+vagrant (and others)	Sorex spp (4)
+skunk	
+hog-nosed	Conepatus mesoleucus Lichenstein
+hooded	Mephitis macroura (Lichenstein)
+striped	M. mephitis (Shreber)
+spotted	Spilogale putorius (Linnaeus)
+squirrel	
+Abert's	Sciurus aberti Woodhouse
+Kaibab Sub S.	aberti
+Apache	S. apache J.A. Allen
+Arizona gray	S. arizonensis (Coues)
+red	Tamiasciurus hudsonicus
+ground	Citellus spp (7)
+vole	
+long-tailed	Microtus longicaudus Merriam
+Mexican	M. Mexicanus (Saussure)
+montane	M. montanus (Peale)
+
+[page 158]
+
+
+Birds
+Common Name	Scientific Name
+Dove	
+Mourning	Zenaida macroura (Linnaeus)
+White-winged	Z. asiatica (Linnaeus)
+Eagle	
+Bald	Haliaeetus leucocephalus (Linnaeus)
+Golden	Aquila chrysaetos (Linnaeus)
+Gnatcatcher, Blue-gray	Polioptila caerulea (Linnaeus)
+Grosbeak, Blue	Guiraea caerulea (Linnaeus)
+Grouse, Blue (or Dusky)	Dendragapus obscurus (Say)
+Hawk	
+Cooper's	Accipiter cooperii (Bonaparte)
+Red-tailed (or Common)	Buteo jamaicensis (Gmelin)
+Jay, Rocky Mountain	(also Gray or Canada) Perisoreus canadensis (Linnaeus)
+Kestrel, American	Falco sparverius Linnaeus
+Owl	
+Elf	Micrathene whitneyi (Cooper)
+Great-Horned	Bubo virginianus (Gmelin)
+Pelican	
+Brown	Pelecanus occidentalis Linnaeus
+White	P. erythrorhynchos Gmelin
+Pigeon, Band-tailed	Columba fasciata Say
+Pipit, Water (or American)	Anthus spinoletta (Linnaeus)
+Pheasant	Phasianus colchicas
+Quail	
+Bobwhite	Colinus virginianus
+Gambel's (or Desert)	Lophortyx Gambelii Gambel
+Scaled	Callipepla squamata (Vigors)
+Roadrunner	Geococcyx californianus (Lesson)
+Sapsucker, Yellow-bellied	Sphyrapicus varius (Linnaeus)
+Sparrow	
+Chipping	Spizella passerina (Bechstein)
+Vesper	Pooecetes gramineus (Gmelin)
+Titmouse, Plain	Parus inornatus Gambel
+Turkey, Wild	Meleagris gallopavo Linnaeus
+Vulture, Turkey	Carthartes aura (Linnaeus)
+Warbler, Lucy's	Vermivora luciae (Cooper)
+Woodpecker	
+Acorn	Melanerpes formicivorus (Swainson)
+Gila	Centurus uropygialis Baird
+Wren, Cactus	Campylorhynchus brunneicapillus (Lafresnaye)
+
+Amphibians and Reptiles
+Common Name	Scientific Name
+frog, canyon treefrog	Hyla arenicolor Cope
+lizard	
+banded gecko	Coleonyx variegatus Baird
+desert iguana	Dipsosaurus dorsalis Baird and Girard
+Gila monster	Heloderma suspectum Cope
+side-blotched lizard	Uta stansburiana Baird and Girard
+whiptail lizard	Cnemidophorus spp (6)
+salamander, tiger	Ambystoma tigrinum Green
+snake	
+blind snake, western	Leptotyphlops humilis Baird and Girard
+bullsnake (or gopher snake)	Pituophis melanoleucus Daudin
+burrowing snake, banded	Chilomeniscus cinctus Cope
+coral snake, Arizona	Micruroides euryxanthus Kennicott
+garter snake, checkered	Thamnophis marcianus Baird and Girard
+glossy snake	Arizona elegans Kennicott
+leaf-nosed snake, saddled	Phyllorhynchus browni Stejneger
+leaf-nosed snake, spotted	P. decurtatus Cope
+long-nosed snake	Rhinocheilus lecontei Baird and Girard
+shovel-nosed snake, Sonora	Chionactis palarostris Kaluber
+shovel-nosed snake, western	C. occipitalis Hallowell
+whipsnake (or coachwhip)	Masticophis flagellum Shaw
+whipsnake, striped	M. taeniatus Hallowell
+toad	
+Colorado River toad	Bufo alvarius Girard
+Great Plains toad	B. cognatus Say
+spadefoot toad, Couch's	Scaphiopus couchi Baird
+spadefoot toad, western	S. (Spea) hammondi Baird
+tortoise, desert	Gopherus agassizi CooperMammals
+Common Name	Scientific Name
+antelope, prong-horned	Antilocapra americana (Ord)
+badger	Taxidea taxus (Shreber)
+bats *	
+free-tailed	Tadarida spp (3)
+mastif	Eumops spp (2)
+plain-nosed	Myotis spp (9)
+bear, black	Euarctos americanus (Pallas)
+beaver	Castor canadensis Kuhle
+bobcat	Lynx rufus (Shreber)
+chipmunk	Eutamias spp (4)
+coati (or coatimundi)	Nasua narica (Linnaeus)
+coyote	Canis latrans Say
+deer	
+mule (or black-tailed)	Odocoileus hemionus (Rafinesque)
+white-tailed (or eastern)	O. virginianus (Zimmermann)
+elk	Cervus canadensis (Erxleben)
+fox	
+gray	Urocyon cinereoargenteus (Shreber)
+Kit	Vulpes macrotis Merriam
+gopher, pocket	Thomomys spp (3)
+javelina	Pecari tajacu (Linnaeus)
+mountain lion	Felis concolor Linnaeus
+mouse (most common)	
+cactus	Peromyscus eremicus (Baird)
+pinyon	P. truei (Shufeldt) **
+pocket	Perognathus spp (10)
+muskrat	Ondatra zibethica (Linnaeus)
+otter, river	Lutra canadensis (Shreber)
+prairie dog, Gunnison's	Cynomys gunnisoni
+porcupine	Erethizon dorsatum Linnaeus
+rabbit	
+cottontail	Sylvilagus spp (3)
+jack	Lepus spp (2)
+raccoon	Procyon lotor (Linnaeus)
+rat	
+kangaroo	Dipodomys spp (5)
+pack	Neotoma albigula Hartley
+wood	Neotoma spp (4)
+ringtail	Bassariscus astutus (Lichenstein)
+sheep, bighorn	Ovis canadensis Shaw
+shrew	
+desert	Notiosorex crawfordi (Coues)
+vagrant (and others)	Sorex spp (4)
+skunk	
+hog-nosed	Conepatus mesoleucus Lichenstein
+hooded	Mephitis macroura (Lichenstein)
+striped	M. mephitis (Shreber)
+spotted	Spilogale putorius (Linnaeus)
+squirrel	
+Abert's	Sciurus aberti Woodhouse
+Kaibab Sub S.	aberti
+Apache	S. apache J.A. Allen
+Arizona gray	S. arizonensis (Coues)
+red	Tamiasciurus hudsonicus
+ground	Citellus spp (7)
+vole	
+long-tailed	Microtus longicaudus Merriam
+Mexican	M. Mexicanus (Saussure)
+montane	M. montanus (Peale)
+
+[page 158]
+
+
+Birds
+Common Name	Scientific Name
+Dove	
+Mourning	Zenaida macroura (Linnaeus)
+White-winged	Z. asiatica (Linnaeus)
+Eagle	
+Bald	Haliaeetus leucocephalus (Linnaeus)
+Golden	Aquila chrysaetos (Linnaeus)
+Gnatcatcher, Blue-gray	Polioptila caerulea (Linnaeus)
+Grosbeak, Blue	Guiraea caerulea (Linnaeus)
+Grouse, Blue (or Dusky)	Dendragapus obscurus (Say)
+Hawk	
+Cooper's	Accipiter cooperii (Bonaparte)
+Red-tailed (or Common)	Buteo jamaicensis (Gmelin)
+Jay, Rocky Mountain	(also Gray or Canada) Perisoreus canadensis (Linnaeus)
+Kestrel, American	Falco sparverius Linnaeus
+Owl	
+Elf	Micrathene whitneyi (Cooper)
+Great-Horned	Bubo virginianus (Gmelin)
+Pelican	
+Brown	Pelecanus occidentalis Linnaeus
+White	P. erythrorhynchos Gmelin
+Pigeon, Band-tailed	Columba fasciata Say
+Pipit, Water (or American)	Anthus spinoletta (Linnaeus)
+Pheasant	Phasianus colchicas
+Quail	
+Bobwhite	Colinus virginianus
+Gambel's (or Desert)	Lophortyx Gambelii Gambel
+Scaled	Callipepla squamata (Vigors)
+Roadrunner	Geococcyx californianus (Lesson)
+Sapsucker, Yellow-bellied	Sphyrapicus varius (Linnaeus)
+Sparrow	
+Chipping	Spizella passerina (Bechstein)
+Vesper	Pooecetes gramineus (Gmelin)
+Titmouse, Plain	Parus inornatus Gambel
+Turkey, Wild	Meleagris gallopavo Linnaeus
+Vulture, Turkey	Carthartes aura (Linnaeus)
+Warbler, Lucy's	Vermivora luciae (Cooper)
+Woodpecker	
+Acorn	Melanerpes formicivorus (Swainson)
+Gila	Centurus uropygialis Baird
+Wren, Cactus	Campylorhynchus brunneicapillus (Lafresnaye)
+
+Amphibians and Reptiles
+Common Name	Scientific Name
+frog, canyon treefrog	Hyla arenicolor Cope
+lizard	
+banded gecko	Coleonyx variegatus Baird
+desert iguana	Dipsosaurus dorsalis Baird and Girard
+Gila monster	Heloderma suspectum Cope
+side-blotched lizard	Uta stansburiana Baird and Girard
+whiptail lizard	Cnemidophorus spp (6)
+salamander, tiger	Ambystoma tigrinum Green
+snake	
+blind snake, western	Leptotyphlops humilis Baird and Girard
+bullsnake (or gopher snake)	Pituophis melanoleucus Daudin
+burrowing snake, banded	Chilomeniscus cinctus Cope
+coral snake, Arizona	Micruroides euryxanthus Kennicott
+garter snake, checkered	Thamnophis marcianus Baird and Girard
+glossy snake	Arizona elegans Kennicott
+leaf-nosed snake, saddled	Phyllorhynchus browni Stejneger
+leaf-nosed snake, spotted	P. decurtatus Cope
+long-nosed snake	Rhinocheilus lecontei Baird and Girard
+shovel-nosed snake, Sonora	Chionactis palarostris Kaluber
+shovel-nosed snake, western	C. occipitalis Hallowell
+whipsnake (or coachwhip)	Masticophis flagellum Shaw
+whipsnake, striped	M. taeniatus Hallowell
+toad	
+Colorado River toad	Bufo alvarius Girard
+Great Plains toad	B. cognatus Say
+spadefoot toad, Couch's	Scaphiopus couchi Baird
+spadefoot toad, western	S. (Spea) hammondi Baird
+tortoise, desert	Gopherus agassizi Cooper
