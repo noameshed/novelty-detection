@@ -1,4 +1,4 @@
-from torchvision import models, transforms
+from torchvision import models, transforms, datasets
 import torch
 from PIL import Image
 import json
@@ -8,7 +8,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def test_images(image_path, net):
+def test_images(image_path, labels, model):
+	'''
+	Tests all images in the image_path with the provided model. Returns
+	a pandas dataframe with a row for each image. The columns are label index,
+	label name, image name, and confidence in classification
+	'''
+
 	df = pd.DataFrame(columns = ['Label index','Class','Image Name','Confidence'])
 	for image in os.listdir(image_path):
 		# Load input image
@@ -18,29 +24,26 @@ def test_images(image_path, net):
 		batch_t = torch.unsqueeze(img_t, 0)	# add dimension in position 0
 											# shape ([1, 3, 224, 224])
 
-		net.eval()		# put model in eval mode
+		model.eval()		# put model in eval mode
 
 		# Test on image
-		out = net(batch_t)				# shape ([1, 1000])
+		out = model(batch_t)				# shape ([1, 1000])
 
 		val, index = torch.max(out,1)			# get the top result
 		# print(val, index.item())
 
 		confidence = torch.nn.functional.softmax(out, dim=1)[0]*100
+
 		df.loc[len(df)] = [index.item(),labels[str(index.item())][1], 
 			labels[str(index.item())][0], confidence[index].item()]
 
 	return df
 
-
-def plot_all_labels(path, model, title=None, showplot=False):
-	try:
-		table = test_images(path, model)
-	except:
-		print('Can not plot')
-		pass
-
-
+def plot_all_labels(table, title=None, save=None, showplot=False):
+	'''
+	Creates a plot of the label distribution in the provided table
+	'''
+	
 	# Which classes were labelled?
 	all_labels = table['Class']
 	all_conf = table['Confidence']
@@ -84,16 +87,22 @@ def plot_all_labels(path, model, title=None, showplot=False):
 	if showplot:
 		plt.show()
 
-	plt.savefig('unlabeled_plots/'+typename+'/'+classname+'.png')
-	plt.close()
+	if save is not None:
+    		plt.savefig(save)
 
-def	plot_by_confidence(path, model):
-	table = test_images(path, model)
+	plt.close()
+	return plt
+
+def	plot_by_confidence(table):
+	'''
+	Splits the data into confidence levels and plots each one separately
+	in subplots
+	'''
+	
 	all_labels = table['Class']
 	all_conf = table['Confidence']
 
 	# Plot the results by confidence tier
-	# fig = plt.figure(figsize=(10, 5))
 	fig = plt.subplots(figsize=(10,4))
 	unique_labels = np.unique(all_labels)
 	for i in range(50, 100, 10):
@@ -133,14 +142,12 @@ def	plot_by_confidence(path, model):
 		
 	plt.suptitle('Quercus agrifola (oak tree)')
 	plt.show()
+	return plt
 
-def plot_split_label_conf(path, model, title=None, showplot=False):
-	try:
-		table = test_images(path, model)
-	except:
-		print('Can not plot')
-		pass
-
+def plot_split_label_conf(table, title=None, showplot=False):
+	'''
+	Plots the label distribution from the table while stratifying confidence levels
+	'''
 
 	# Which classes were labelled?
 	all_labels = table['Class']
@@ -197,19 +204,91 @@ def plot_split_label_conf(path, model, title=None, showplot=False):
 		plt.show()
 
 	plt.close()
+	return plt
 
+def get_top_n_labels(table, n):
+	'''
+	Gets the n most common labels from the table and returns dictionaries of
+	the label names to counts and label names to confidences
+	Use n = 0 to get all labels
+	'''	
+	# Which classes were labelled?
+	all_labels = table['Class']
+	all_conf = table['Confidence']
+	unique_labels = np.unique(all_labels)
+	
+	# Plot the chosen labels by their frequency
+	label_counts = np.zeros(len(unique_labels))
+	label_conf = np.zeros(len(unique_labels))
+	for i, l in enumerate(unique_labels):
+		label_counts[i] = np.sum(all_labels == l)
+		conf = all_conf[all_labels==l]
+		avg_conf = sum(conf)/len(conf)
+		label_conf[i] = avg_conf
+
+	# Sort the data and return the top n
+	to_sort = np.argsort(label_counts)
+
+	return unique_labels[to_sort][-n:], label_conf[to_sort][-n:], label_counts[to_sort][-n:]
+
+	
+def test_inat(test_path, model, imagenet_labels):
+	iNat_results = {}
+	for typename in os.listdir(test_path):
+		iNat_results[typename] = {}
+		counter = 0
+
+		for classname in tqdm(os.listdir(test_path+typename+'/')):
+			iNat_results[typename][classname] = {}
+			path = test_path+typename+'/'+classname+'/'
+
+			try:
+				table = test_images(path, imagenet_labels, model)
+				labels, confs, counts = get_top_n_labels(table, 0)	# get all results
+				
+				to_sort = np.argsort(counts)
+
+				iNat_results[typename][classname]['labels'] = labels[to_sort].tolist()
+				iNat_results[typename][classname]['confs'] = confs[to_sort].tolist()
+				iNat_results[typename][classname]['counts'] = counts[to_sort].tolist()
+				counter += 1
+
+			except:
+				# print('Can not plot', typename, classname)
+				iNat_results[typename][classname]['labels'] = None
+				iNat_results[typename][classname]['confs'] = None
+				iNat_results[typename][classname]['counts'] = None
+				pass
+
+		with open('inat_results.json', 'w') as outfile:
+			json.dump(iNat_results, outfile)
+			
+
+	with open('inat_results.json', 'w') as outfile:
+		json.dump(iNat_results, outfile)
+	
+def load_json(filename):
+	df = pd.DataFrame(columns=['Kingdom', 'Class','Common Name','Relation to Imagnet'])
+	with open(filename) as json_file:
+		data = json.load(json_file)
+		for kingdom in data:
+			for a in data[kingdom]:
+				df.loc[len(df)] = [kingdom, a, None, None]
+
+	df.to_csv('in_out_class.csv')
 
 
 if __name__ == '__main__':
 	# print(dir(models))
+	test_path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/'
 
-	# Load pretrained AlexNet
+	# Load pretrained Alexnet
 	alexnet = models.alexnet(pretrained=True)
 	# print(alexnet)
 
 	# Load imagenet labels as dictionary
 	f = open('D:/noam_/Cornell/CS7999/imagenet_class_index.json', 'r')
-	labels = json.load(f)
+	imagenet_labels = json.load(f)
 
 	# Transform for input images
 	transform = transforms.Compose([
@@ -221,19 +300,16 @@ if __name__ == '__main__':
 			std=[0.229, 0.224, 0.225]
 		)])
 	
-	# path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/Plantae/Rosa californica/'
-	path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/Reptilia/Terrapene carolina/'
-	# path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/Mollusca/Limacia cockerelli/'
-	# path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/Aves/Spheniscus demersus/'
-	# path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/Plantae/Woodwardia areolata/'
-	# path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/Plantae/Quercus agrifolia/'
 
-	# for t in os.listdir('D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/'):
-	# 	typename = t
-	# 	for c in tqdm(os.listdir('D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/'+t)):
-	# 		classname = c
+	# path = test_path + '/Plantae/Rosa californica/'
+	# path = test_path + '/Reptilia/Terrapene carolina/'
+	# path = test_path + '/Mollusca/Limacia cockerelli/'
+	# path = test_path + '/Aves/Spheniscus demersus/'
+	# path = test_path + '/Plantae/Woodwardia areolata/'
+	# path = test_path + '/Plantae/Quercus agrifolia/'
 
-	# 		path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/' + typename + '/' + classname + '/'
-			
+	load_json('inat_results.json')
 
-	plot_split_label_conf(path, alexnet, title='Box turtle', showplot=True)
+	
+
+	
