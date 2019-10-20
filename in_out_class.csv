@@ -32,26 +32,26 @@ Actinopterygii,Lepomis megalotis,Longear sunfish,not in imagenet,! Fish in Image
 Actinopterygii,Lutjanus griseus,"Gray snapper, mangrove snapper",not in imagenet,! Fish in Imagent,AE
 Actinopterygii,Megalops atlanticus,"Atlantic tarpon, silver king",not in imagenet,! Fish in Imagent,AE
 Actinopterygii,Micropterus dolomieu,"Smallmouth bass, smallmouth, bronzeback, brown bass, brownie, smallie, bronze bass, bareback bass",not in imagenet,! Fish in Imagent,AE
-Actinopterygii,Micropterus salmoides,,,,
-Actinopterygii,Mola mola,,,,
-Actinopterygii,Morone saxatilis,,,,
-Actinopterygii,Naso lituratus,,,,
-Actinopterygii,Oligocottus maculosus,,,,
-Actinopterygii,Oncorhynchus mykiss,,,,
-Actinopterygii,Oncorhynchus nerka,,,,
-Actinopterygii,Ostracion meleagris,,,,
-Actinopterygii,Perca flavescens,,,,
-Actinopterygii,Pomoxis nigromaculatus,,,,
-Actinopterygii,Pterois volitans,,,,
-Actinopterygii,Rhinecanthus rectangulus,,,,
-Actinopterygii,Salmo trutta,,,,
-Actinopterygii,Salvelinus fontinalis,,,,
-Actinopterygii,Scarus rubroviolaceus,,,,
-Actinopterygii,Sparisoma viride,,,,
-Actinopterygii,Sphyraena barracuda,,,,
-Actinopterygii,Syngnathus leptorhynchus,,,,
-Actinopterygii,Thalassoma bifasciatum,,,,
-Actinopterygii,Zanclus cornutus,,,,
+Actinopterygii,Micropterus salmoides,"Largemouth bass, widemouth bass, bigmouth bass, black bass, bucketmouth, largies, Potter's fish, Florida bass, Florida largemouth, green bass, bucketmouth bass, Green trout, gilsdorf bass, Oswego bass, southern largemouth, northern largemouth, LMB",not in imagenet,,AE
+Actinopterygii,Mola mola,"Ocean sunfish, common mola, mola mola",not in imagenet,,AE
+Actinopterygii,Morone saxatilis,"Striped bass, atlantic striped bass, striper, linesider, rock, rockfish",not in imagenet,,AE
+Actinopterygii,Naso lituratus,"Barcheek unicornfish, naso tang, orange-spine unicornfish",not in imagenet,,AE
+Actinopterygii,Oligocottus maculosus,Tidepool sculpin,not in imagenet,,AE
+Actinopterygii,Oncorhynchus mykiss,"Rainbow trout, steelhead, coastal rainbow trout",relative in imagenet,relative: coho,AE
+Actinopterygii,Oncorhynchus nerka,"Sockeye salmon, red salmon, kokanee salmon, blueback salmon",relative in imagenet,relative: coho,AE
+Actinopterygii,Ostracion meleagris,"Spotted boxfish, white-spotted boxfish",not in imagenet,! Same order (biological) as the puffer,AE
+Actinopterygii,Perca flavescens,"Yellow perch, perch, striped perch, american perch, coontail, lake perch, raccoon perch, ring-tail perch, ringed perch, dodd fish",not in imagenet,,AE
+Actinopterygii,Pomoxis nigromaculatus,Black crappie,not in imagenet,,AE
+Actinopterygii,Pterois volitans,"Devil firefish, common lionfish",in imagenet,,AE
+Actinopterygii,Rhinecanthus rectangulus,"Reef triggerfish, rectangular triggerfish",not in imagenet,,AE
+Actinopterygii,Salmo trutta,"Brown trout, lake trout",relative in imagenet,relative: coho,AE
+Actinopterygii,Salvelinus fontinalis,"Brook trout, eastern brook trout, speckled trout, brook charr, squaretail, mud trout, coaster trout, coasters",relative in imagenet,relative: coho,AE
+Actinopterygii,Scarus rubroviolaceus,"Ember parrotfish, bicolor parrotfish, redlip parrotfish",not in imagenet,,AE
+Actinopterygii,Sparisoma viride,"Stoplight parrotfish, stoplight",not in imagenet,,AE
+Actinopterygii,Sphyraena barracuda,"Great barracuda, giant barracuda",not in imagenet,,AE
+Actinopterygii,Syngnathus leptorhynchus,Bay pipefish,not in imagenet,,AE
+Actinopterygii,Thalassoma bifasciatum,"Bluehead wrasse, blunt-headed wrasse",not in imagenet,,AE
+Actinopterygii,Zanclus cornutus,Moorish idol,not in imagenet,,AE
 Amphibia,Acris blanchardi,,,,
 Amphibia,Acris crepitans,,,,
 Amphibia,Acris gryllus,,,,
@@ -360,7 +360,7 @@ Aves,Anas querquedula,Garganey,relative in imagenet,"relative: red-breasted merg
 Aves,Anas rubripes,American black duck,relative in imagenet,"relative: red-breasted merganser, drake",NE
 Aves,Anas strepera,"Gadwall, common gadwall",relative in imagenet,"relative: red-breasted merganser, drake",NE
 Aves,Anas superciliosa,"Pacific black duck, grey duck",relative in imagenet,"relative: red-breasted merganser, drake",NE
-Aves,Anas superciliosa x platyrhynchos,Pacific black duck x mallard hybrid,relative in imagenet,"relative: red-breasted merganser, drake",NE
+Aves,Anas superciliosa  platyrhynchos,Pacific black duck x mallard hybrid,relative in imagenet,"relative: red-breasted merganser, drake",NE
 Aves,Anastomus lamelligerus,African openbill,relative in imagenet,"relative: red-breasted merganser, drake",NE
 Aves,Anhinga anhinga,"Anhinga, snakebird, darter, American darter, water turkey",not in imagenet,,NE
 Aves,Anhinga novaehollandiae,"Australasian darter, Australian darter",not in imagenet,,NE
