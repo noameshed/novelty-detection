@@ -16,28 +16,44 @@ def test_images(image_path, labels, model):
 	'''
 
 	df = pd.DataFrame(columns = ['Label index','Class','Image Name','Confidence'])
+	results = {}
 	for image in os.listdir(image_path):
+		results[image] = {}
+
 		# Load input image
 		img = Image.open(image_path+image)	
 
-		img_t = transform(img)				# shape ([3, 224, 224])
-		batch_t = torch.unsqueeze(img_t, 0)	# add dimension in position 0
-											# shape ([1, 3, 224, 224])
-
-		model.eval()		# put model in eval mode
-
 		# Test on image
-		out = model(batch_t)				# shape ([1, 1000])
+		out = test_one_image(img, model)
+		
+		val, index = torch.max(out,1)			# get the top 1 result
 
-		val, index = torch.max(out,1)			# get the top result
-		# print(val, index.item())
+		to_sort = torch.argsort(out).numpy().flatten()
+		out_sorted = torch.sort(out)[0]
 
 		confidence = torch.nn.functional.softmax(out, dim=1)[0]*100
+		conf_sorted = confidence[to_sort]
 
 		df.loc[len(df)] = [index.item(),labels[str(index.item())][1], 
 			labels[str(index.item())][0], confidence[index].item()]
 
-	return df
+		results[image]['labels'] = [labels[str(idx)][1] for idx in to_sort]
+		results[image]['vals'] = [round(o.item(), 3) for o in out_sorted.data.numpy().flatten()]
+		results[image]['confs'] = [c.item() for c in conf_sorted.data.numpy().flatten()]
+
+	return df, results
+
+def test_one_image(img, model):
+	img_t = transform(img)				# shape ([3, 224, 224])
+	batch_t = torch.unsqueeze(img_t, 0)	# add dimension in position 0
+										# shape ([1, 3, 224, 224])
+
+	model.eval()		# put model in eval mode
+
+	# Test on image
+	out = model(batch_t)				# shape ([1, 1000])
+
+	return out
 
 def plot_all_labels(table, title=None, save=None, showplot=False):
 	'''
@@ -235,37 +251,45 @@ def get_top_n_labels(table, n):
 def test_inat(test_path, model, imagenet_labels):
 	iNat_results = {}
 	for typename in os.listdir(test_path):
-		iNat_results[typename] = {}
+		# iNat_results[typename] = {}
+		iNat_results = {}
 		counter = 0
 
 		for classname in tqdm(os.listdir(test_path+typename+'/')):
-			iNat_results[typename][classname] = {}
+			iNat_results[classname] = {}
 			path = test_path+typename+'/'+classname+'/'
 
 			try:
-				table = test_images(path, imagenet_labels, model)
+				table, dic = test_images(path, imagenet_labels, model)
 				labels, confs, counts = get_top_n_labels(table, 0)	# get all results
 				
 				to_sort = np.argsort(counts)
+				# Dictionary version, all results for each picture
+				for im in dic:
+					iNat_results[classname][im] = {}
+					iNat_result[classname][im]['labels'] = list(dic[im]['labels'])
+					iNat_results[classname][im]['vals'] = list(dic[im]['vals'])
+					iNat_results[classname][im]['confs'] = list(dic[im]['confs'])
 
-				iNat_results[typename][classname]['labels'] = labels[to_sort].tolist()
-				iNat_results[typename][classname]['confs'] = confs[to_sort].tolist()
-				iNat_results[typename][classname]['counts'] = counts[to_sort].tolist()
-				counter += 1
+					# Table version, top result for each picture
+					# iNat_results[typename][classname]['labels'] = labels[to_sort].tolist()
+					# iNat_results[typename][classname]['confs'] = confs[to_sort].tolist()
+					# iNat_results[typename][classname]['counts'] = counts[to_sort].tolist()
+					# counter += 1
 
 			except:
 				# print('Can not plot', typename, classname)
-				iNat_results[typename][classname]['labels'] = None
-				iNat_results[typename][classname]['confs'] = None
-				iNat_results[typename][classname]['counts'] = None
+				iNat_results[classname]['labels'] = None
+				iNat_results[classname]['confs'] = None
+				iNat_results[classname]['counts'] = None
 				pass
-
-		with open('inat_results.json', 'w') as outfile:
+		
+		fname = 'inat_results_all' + typename + '.json'
+		with open(fname, 'w') as outfile:
 			json.dump(iNat_results, outfile)
-			
 
-	with open('inat_results.json', 'w') as outfile:
-		json.dump(iNat_results, outfile)
+	# with open('inat_results_all.json', 'w') as outfile:
+	# 	json.dump(iNat_results, outfile)
 	
 def load_json(filename):
 	df = pd.DataFrame(columns=['Kingdom', 'Class','Common Name','Relation to Imagnet'])
@@ -310,6 +334,6 @@ if __name__ == '__main__':
 
 	load_json('inat_results.json')
 
-	
+	test_inat(test_path, alexnet, imagenet_labels)
 
 	
