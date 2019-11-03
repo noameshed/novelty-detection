@@ -10,9 +10,9 @@ from tqdm import tqdm
 
 def test_images(image_path, labels, model):
 	'''
-	Tests all images in the image_path with the provided model. Returns
-	a pandas dataframe with a row for each image. The columns are label index,
-	label name, image name, and confidence in classification
+	Tests all images in the image_path with the provided model.
+	Returns:
+		results dictionary with all results (i.e. the confidence of all possible labels)
 	'''
 
 	df = pd.DataFrame(columns = ['Label index','Class','Image Name','Confidence'])
@@ -222,11 +222,9 @@ def plot_split_label_conf(table, title=None, showplot=False):
 	plt.close()
 	return plt
 
-def get_top_n_labels(table, n):
+def get_most_common_labels(table, n):
 	'''
-	Gets the n most common labels from the table and returns dictionaries of
-	the label names to counts and label names to confidences
-	Use n = 0 to get all labels
+	Gets the n most common labels for the given class
 	'''	
 	# Which classes were labelled?
 	all_labels = table['Class']
@@ -250,24 +248,29 @@ def get_top_n_labels(table, n):
 	
 def test_inat(test_path, model, imagenet_labels):
 	iNat_results = {}
+	# Loop through each biological group
 	for typename in os.listdir(test_path):
+		if typename != 'Aves':
+			continue
 		# iNat_results[typename] = {}
 		iNat_results = {}
 		counter = 0
 
+		# Loop through each creature in the group
 		for classname in tqdm(os.listdir(test_path+typename+'/')):
 			iNat_results[classname] = {}
 			path = test_path+typename+'/'+classname+'/'
 
 			try:
 				table, dic = test_images(path, imagenet_labels, model)
-				labels, confs, counts = get_top_n_labels(table, 0)	# get all results
+
+				labels, confs, counts = get_most_common_labels(table, 0)	# get all results
 				
 				to_sort = np.argsort(counts)
 				# Dictionary version, all results for each picture
 				for im in dic:
 					iNat_results[classname][im] = {}
-					iNat_result[classname][im]['labels'] = list(dic[im]['labels'])
+					iNat_results[classname][im]['labels'] = list(dic[im]['labels'])
 					iNat_results[classname][im]['vals'] = list(dic[im]['vals'])
 					iNat_results[classname][im]['confs'] = list(dic[im]['confs'])
 
@@ -284,9 +287,9 @@ def test_inat(test_path, model, imagenet_labels):
 				iNat_results[classname]['counts'] = None
 				pass
 		
-		fname = 'inat_results_all' + typename + '.json'
-		with open(fname, 'w') as outfile:
-			json.dump(iNat_results, outfile)
+			fname = 'alexnet_inat_results/inat_results_all_' + typename + '.json'
+			with open(fname, 'w') as outfile:
+				json.dump(iNat_results, outfile)
 
 	# with open('inat_results_all.json', 'w') as outfile:
 	# 	json.dump(iNat_results, outfile)
