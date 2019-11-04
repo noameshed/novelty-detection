@@ -246,20 +246,19 @@ def get_most_common_labels(table, n):
 	return unique_labels[to_sort][-n:], label_conf[to_sort][-n:], label_counts[to_sort][-n:]
 
 	
-def test_inat(test_path, model, imagenet_labels):
-	iNat_results = {}
+def test_inat(root_path, model, imagenet_labels):
 	# Loop through each biological group
-	for typename in os.listdir(test_path):
-		if typename != 'Aves':
+	for typename in os.listdir(root_path):
+		# Create directories if they don't already exist
+		try:
+			os.mkdir(os.getcwd() + '/alexnet_inat_results/' + typename + '/')
+		except:
 			continue
-		# iNat_results[typename] = {}
-		iNat_results = {}
-		counter = 0
-
-		# Loop through each creature in the group
-		for classname in tqdm(os.listdir(test_path+typename+'/')):
-			iNat_results[classname] = {}
-			path = test_path+typename+'/'+classname+'/'
+		
+		# Loop through each class in the group
+		for classname in tqdm(os.listdir(root_path+typename+'/')):
+			iNat_results = {}
+			path = root_path+typename+'/'+classname+'/'
 
 			try:
 				table, dic = test_images(path, imagenet_labels, model)
@@ -269,30 +268,22 @@ def test_inat(test_path, model, imagenet_labels):
 				to_sort = np.argsort(counts)
 				# Dictionary version, all results for each picture
 				for im in dic:
-					iNat_results[classname][im] = {}
-					iNat_results[classname][im]['labels'] = list(dic[im]['labels'])
-					iNat_results[classname][im]['vals'] = list(dic[im]['vals'])
-					iNat_results[classname][im]['confs'] = list(dic[im]['confs'])
-
-					# Table version, top result for each picture
-					# iNat_results[typename][classname]['labels'] = labels[to_sort].tolist()
-					# iNat_results[typename][classname]['confs'] = confs[to_sort].tolist()
-					# iNat_results[typename][classname]['counts'] = counts[to_sort].tolist()
-					# counter += 1
+					iNat_results[im] = {}
+					iNat_results[im]['labels'] = list(dic[im]['labels'])
+					iNat_results[im]['vals'] = list(dic[im]['vals'])
+					iNat_results[im]['confs'] = list(dic[im]['confs'])
 
 			except:
-				# print('Can not plot', typename, classname)
-				iNat_results[classname]['labels'] = None
-				iNat_results[classname]['confs'] = None
-				iNat_results[classname]['counts'] = None
+				message = typename + ',' + classname
+				iNat_results['labs'] = None
+				iNat_results['confs'] = None
+				iNat_results['vals'] = None
 				pass
 		
-			fname = 'alexnet_inat_results/inat_results_all_' + typename + '.json'
+			fname = 'alexnet_inat_results/' + typename + '/' + classname + '.json'
 			with open(fname, 'w') as outfile:
 				json.dump(iNat_results, outfile)
 
-	# with open('inat_results_all.json', 'w') as outfile:
-	# 	json.dump(iNat_results, outfile)
 	
 def load_json(filename):
 	df = pd.DataFrame(columns=['Kingdom', 'Class','Common Name','Relation to Imagnet'])
@@ -334,8 +325,6 @@ if __name__ == '__main__':
 	# path = test_path + '/Aves/Spheniscus demersus/'
 	# path = test_path + '/Plantae/Woodwardia areolata/'
 	# path = test_path + '/Plantae/Quercus agrifolia/'
-
-	load_json('inat_results.json')
 
 	test_inat(test_path, alexnet, imagenet_labels)
 
