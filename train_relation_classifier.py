@@ -12,15 +12,27 @@ from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 
 def get_feature_vec(data, query, n):
+	'''
+	Creates and returns a feature vector of length n
+	The feature vector is based on the distribution of top labels for a class
+	If there are not n labels, then zeros are appended to the front of the feature vector
+		to make it length n
+	'''
+	
 	grp = query['Biological Group']
 	name = query['Class']
-	feat_vec = data[grp][name]['counts']
+	counts = data[grp][name]['counts']
+	confs = data[grp][name]['confs']
+	# Feature vector of frequencies:
+	feat_vec = counts		# Create feature vector
 
 	if feat_vec is None:
 		return None
 
 	feat_vec = np.array(feat_vec)
-	feat_vec /= sum(feat_vec)
+	feat_vec /= sum(feat_vec)		# convert count to frequency
+
+	feat_vec = feat_vec * confs	# Multiply frequencies by confidence levels
 
 	if len(feat_vec) < n:
 		feat_vec = np.concatenate((np.zeros(n-len(feat_vec)), feat_vec))
@@ -94,7 +106,7 @@ if __name__ == '__main__':
 	n = 20
 	X = []
 	Y = []
-	with open('inat_results.json', 'r') as f:
+	with open('alexnet_inat_results/inat_results_top_choice.json', 'r') as f:
 		f = json.load(f)
 		
 		for i in labeled_data.index:
@@ -110,20 +122,24 @@ if __name__ == '__main__':
 	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=42)
 
 	# Train linear classifier
-	clf = SVC(tol=1e-3, random_state=True, gamma='auto')
+	title = 'CM for SVM, features=freq x confs, n=20'
+	clf = SVC(tol=1e-3, random_state=True)
 	clf.fit(X_train, Y_train)
 	preds = clf.predict(X_test)
-	for p in preds:
-		print(p)
+	# for p in preds:
+	# 	print(p)
 	print('SVM:', clf.score(X_test, Y_test))
 	classes = ['relative in imagenet', 'in imagenet', 'parent in imagenet', 'not in imagenet']
-	plot_confusion_matrix(Y_test, preds, classes, normalize=False)
+	plot_confusion_matrix(Y_test, preds, classes, normalize=False, title=title)
 
 	# Train Random Forest Classifier
+	title = 'CM for RF, features=freq x confs, n=20'
 	clf = RandomForestClassifier(n_estimators=100)
 	clf.fit(X_train, Y_train)
+	preds = clf.predict(X_test)
 	print('Random Forest:', clf.score(X_test, Y_test))
 
 	results = clf.predict(X_test)
-	for i, res in enumerate(results):
-		print(res, Y_test[i])
+	# for i, res in enumerate(results):
+	# 	print(res, Y_test[i])
+	plot_confusion_matrix(Y_test, preds, classes, normalize=False, title=title)
