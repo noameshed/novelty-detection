@@ -1,4 +1,0 @@
-theme: jekyll-theme-midnight
-title: Novelty Detection
-description: CNNs aren't so good at detecting classes they've never seen before,
- but humans are. Can we use human intuition to improve CNN novelty detection?
