@@ -5,13 +5,15 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
+from tqdm import tqdm
 
-def get_feature_vec(data, query, n):
+def get_feature_vec_top_labels(data, query, n):
 	'''
 	Creates and returns a feature vector of length n
 	The feature vector is based on the distribution of top labels for a class
@@ -99,24 +101,53 @@ if __name__ == '__main__':
 	# Load dataframe of inaturalist annotations
 	df = pd.read_csv('in_out_class.csv')
 
-	labeled_data = df[df['Biological Group']=='Aves']
+	labeled_data = df[df['Biological Group']=='Animalia']
 	labeled_data = labeled_data[labeled_data['Annotator'].notnull()]
 
 	# Collect feature vectors and labels
 	n = 20
 	X = []
 	Y = []
+
+	'''
+	### Uses distribution of top n labels as feature vectors
 	with open('alexnet_inat_results/inat_results_top_choice.json', 'r') as f:
 		f = json.load(f)
 		
 		for i in labeled_data.index:
 			row = df.iloc[i]
-			vec = get_feature_vec(f, row, n)
+			vec = get_feature_vec_top_labels(f, row, n)
 			if vec is None:
 				continue
 			X.append(list(vec))
 			Y.append(row['Relation to Imagenet'])
+	'''
 
+	### Uses confidence vectors as feature vectors - looks at separate files, not large json
+	total_images = 0
+	for i in labeled_data.index:
+		row = df.iloc[i]
+		grp = row['Biological Group']
+		name = row['Class']
+		filename = os.getcwd() + '/alexnet_inat_results/' + grp + '/' + name + '.json'
+		with open(filename, 'r') as f:
+			f = json.load(f)
+			for im in tqdm(f.keys()):
+				total_images += 1
+				# Query the vector of labels and confidence levels for each image test
+				l = f[im]['labels']
+				c = f[im]['confs']
+
+				# Sort according to the label name (alphabetical)
+				to_sort = np.argsort(l)
+				l_sorted = [l[i] for i in to_sort]
+				c_sorted = [c[i] for i in to_sort]
+
+				# Add to training data
+				X.append(list(c_sorted))
+				Y.append(row['Relation to Imagenet'])
+
+	
 	X = np.array(X)
 	# Split the data
 	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=42)
@@ -143,3 +174,4 @@ if __name__ == '__main__':
 	# for i, res in enumerate(results):
 	# 	print(res, Y_test[i])
 	plot_confusion_matrix(Y_test, preds, classes, normalize=False, title=title)
+	

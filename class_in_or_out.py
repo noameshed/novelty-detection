@@ -38,13 +38,8 @@ def avg_distribution(data, n, dic):
 	This function averages the distribution of the top n most common
 	labels for each class in the given data set
 	'''
-	# Get results for in-class data
 	class_confs = np.array([]).reshape(0,n)
 	class_freq = np.array([]).reshape(0,n)
-	# err_per = np.zeros((2, n))
-	# err_per[0,:] = np.full((1,n), np.inf)
-	# err_confs = np.zeros((2, n))
-	# err_confs[0,:] = np.full((1,n), np.inf)
 
 	for idx in data.index:
 		row = df.iloc[idx]
@@ -131,8 +126,7 @@ if __name__ == '__main__':
 	print(len(par), '\tparent in imagenet')
 	print(len(not_in), '\tnot in imagenet')
 
-	# inat_results_top_choice.json.json saves the top result for each image in each class (in each biological group)
-	
+	# inat_results_top_choice.json saves the top result for each image in each class (in each biological group)
 	with open('alexnet_inat_results/inat_results_top_choice.json', 'r') as f:
 		f = json.load(f)
 		n = 10
