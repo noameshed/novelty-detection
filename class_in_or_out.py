@@ -33,48 +33,38 @@ def n_most_common(data, n):
 
 	return top
 
-def get_results(data, n, dic):
-	# Get results for in-class
-	class_confs = np.zeros(n)
-	class_per = np.zeros(n)
-	err_per = np.zeros((2, n))
-	err_per[0,:] = np.full((1,n), np.inf)
-	err_confs = np.zeros((2, n))
-	err_confs[0,:] = np.full((1,n), np.inf)
+def avg_distribution(data, n, dic):
+	'''
+	This function averages the distribution of the top n most common
+	labels for each class in the given data set
+	'''
+	# Get results for in-class data
+	class_confs = np.array([]).reshape(0,n)
+	class_freq = np.array([]).reshape(0,n)
+	# err_per = np.zeros((2, n))
+	# err_per[0,:] = np.full((1,n), np.inf)
+	# err_confs = np.zeros((2, n))
+	# err_confs[0,:] = np.full((1,n), np.inf)
 
 	for idx in data.index:
 		row = df.iloc[idx]
 		results = find(dic, row)
+
 		if results['labels'] is not None:
-
+			# Add the top labels to the distribution
 			top = n_most_common(results,n)
-			class_confs += top['confs']
-			class_per += top['percents']
+			class_confs = np.vstack((class_confs, top['confs']))
+			class_freq = np.vstack((class_freq, top['percents']))
 
-			idx_min = top['percents']<err_per[0,:]
-			idx_max = top['percents']>err_per[1,:]
-			err_per[0,:][idx_min] = top['percents'][idx_min]
-			err_per[1,:][idx_max] = top['percents'][idx_max]
-			
-			idx_min = top['confs']<err_conf[0,:]
-			idx_max = top['confs']>err_conf[1,:]
-			err_confs[0,:][idx_min] = top['confs'][idx_min]
-			err_confs[1,:][idx_max] = top['confs'][idx_max]
-			
-	# Get average confidence and frequency
-	class_confs /= len(data.index)
-	class_per /= len(data.index)		
+	# Get stdev for confidence and frequency of top labels
+	std_confs = np.std(class_confs, axis=0)
+	std_freq = np.std(class_freq, axis=0)
 
-	print_error_stats(err_confs, class_confs, n)
+	# Get average confidence and frequency of top labels
+	class_confs = np.sum(class_confs, axis=0)/class_confs.shape[0]
+	class_freq = np.sum(class_freq, axis=0)/class_freq.shape[0]
 
-	# Normalize the errors to be centered at the average
-	err_per[0,:] = class_per - err_per[0,:]
-	err_per[1,:] = err_per[1,:] - class_per
-
-	err_conf[0,:] = class_confs - err_conf[0,:]
-	err_conf[1,:] = err_conf[1,:] - class_confs
-
-	return class_confs, class_per, err_per, err_conf
+	return class_confs, class_freq, std_confs, std_freq
 
 def print_error_stats(err, avgs, n):
 	mins = err[0,:]
@@ -141,10 +131,11 @@ if __name__ == '__main__':
 	print(len(par), '\tparent in imagenet')
 	print(len(not_in), '\tnot in imagenet')
 
-	# inat_results.json saves the top result for each image in each class (in each biological group)
-	with open('inat_results.json', 'r') as f:
+	# inat_results_top_choice.json.json saves the top result for each image in each class (in each biological group)
+	
+	with open('alexnet_inat_results/inat_results_top_choice.json', 'r') as f:
 		f = json.load(f)
-		n = 20
+		n = 10
 		# Set up plot
 		plt.figure()
 		plt.xticks(np.arange(0,-1))
@@ -153,21 +144,10 @@ if __name__ == '__main__':
 		plt.ylabel('Label Confidence (%)')
 		plt.title('Birds: Label confidence for in vs out class')
 
-		# Get results for in-class
-		in_class_confs, in_class_per, err_freq, err_conf = get_results(is_in, n, f)	
-		plt.errorbar(np.arange(n), in_class_confs, err_conf, elinewidth=0.5, capsize = 2)
-		
-		# Get results for not in class
-		out_class_confs, out_class_per, err_freq, err_conf = get_results(not_in, n, f)	
-		plt.errorbar(np.arange(n), out_class_confs, err_conf, elinewidth=0.5, capsize = 2)
-
-		# Get results for relative in class
-		rel_class_confs, rel_class_per, err_freq, err_conf = get_results(rels, n, f)	
-		plt.errorbar(np.arange(n), rel_class_confs, err_conf, elinewidth=0.5, capsize = 2)
-
-		# Get results for parent in class
-		par_class_confs, par_class_per, err_freq, err_conf = get_results(par, n, f)	
-		plt.errorbar(np.arange(n), par_class_confs, err_conf, elinewidth=0.5, capsize = 2)
+		# Plot the distribution for the top n labels split by group (in, not in, par, rel)
+		for data in [is_in, not_in, rels, par]:
+			class_confs, class_freq, std_confs, std_freq = avg_distribution(data, n, f)	
+			plt.errorbar(np.arange(n), class_freq, std_freq, elinewidth=0.5, capsize = 2)
 
 		plt.legend(['In Imagenet','Not In Imagenet','Relative In Imagenet','Parent In Imagenet'], loc='upper left')
 		# plt.legend(['In Imagenet','Not In Imagenet', 'Parents + Relatives'], loc='upper left')
