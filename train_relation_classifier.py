@@ -108,6 +108,7 @@ if __name__ == '__main__':
 	n = 20
 	X = []
 	Y = []
+	XClasses = []
 
 	'''
 	### Uses distribution of top n labels as feature vectors
@@ -124,7 +125,6 @@ if __name__ == '__main__':
 	'''
 
 	### Uses confidence vectors as feature vectors - looks at separate files, not large json
-	total_images = 0
 	for i in labeled_data.index:
 		row = df.iloc[i]
 		grp = row['Biological Group']
@@ -132,46 +132,67 @@ if __name__ == '__main__':
 		filename = os.getcwd() + '/alexnet_inat_results/' + grp + '/' + name + '.json'
 		with open(filename, 'r') as f:
 			f = json.load(f)
-			for im in tqdm(f.keys()):
-				total_images += 1
+			for im in tqdm(f.keys()):		# Loop through the images in the file
 				# Query the vector of labels and confidence levels for each image test
-				l = f[im]['labels']
-				c = f[im]['confs']
+				try:
+					l = f[im]['labels']
+					c = f[im]['confs']
+				except:
+					print('No label for ', filename, im)
 
 				# Sort according to the label name (alphabetical)
 				to_sort = np.argsort(l)
 				l_sorted = [l[i] for i in to_sort]
 				c_sorted = [c[i] for i in to_sort]
-
+			
 				# Add to training data
 				X.append(list(c_sorted))
 				Y.append(row['Relation to Imagenet'])
+				XClasses.append(i)
 
-	
+	classIDs = np.unique(XClasses)
+
 	X = np.array(X)
+	Y = np.array(Y)
+	print(X.shape, Y.shape)
 	# Split the data
-	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=42)
+	# X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=42)	# Split by image
+	X_train_ids, X_test_ids, Y_train_ids, Y_test_ids = train_test_split(classIDs, classIDs, test_size=0.33, random_state=42)		# Split by class
+	X_train = []
+	X_test = []
+	Y_train = []
+	Y_test = []
+	for idx in X_train_ids:	# For each class, save the features in X and labels in Y
+		im_idxs = np.where(XClasses==idx)
+		for i in im_idxs[0]:
+			X_train.append(X[i])
+			Y_train.append(Y[i])
+	
+	for idx in X_test_ids:	# For each class, save the features in X and labels in Y
+		im_idxs = np.where(XClasses==idx)
+		for i in im_idxs[0]:
+			X_test.append(X[i])
+			Y_test.append(Y[i])
+
+	print(len(X_train), len(X_train[0]), len(Y_train))
+
 
 	# Train linear classifier
-	title = 'CM for SVM, features=freq x confs, n=20'
-	clf = SVC(tol=1e-3, random_state=True)
-	clf.fit(X_train, Y_train)
-	preds = clf.predict(X_test)
-	# for p in preds:
-	# 	print(p)
-	print('SVM:', clf.score(X_test, Y_test))
-	classes = ['relative in imagenet', 'in imagenet', 'parent in imagenet', 'not in imagenet']
-	plot_confusion_matrix(Y_test, preds, classes, normalize=False, title=title)
+	clf_svc = SVC(tol=1e-3, random_state=True)
+	clf_svc.fit(X_train, Y_train)
+	preds_svc = clf_svc.predict(X_test)
+	print('SVM:', clf_svc.score(X_test, Y_test))
 
 	# Train Random Forest Classifier
-	title = 'CM for RF, features=freq x confs, n=20'
-	clf = RandomForestClassifier(n_estimators=100)
-	clf.fit(X_train, Y_train)
-	preds = clf.predict(X_test)
-	print('Random Forest:', clf.score(X_test, Y_test))
+	clf_rf = RandomForestClassifier(n_estimators=100)
+	clf_rf.fit(X_train, Y_train)
+	preds_rf = clf_rf.predict(X_test)
+	print('Random Forest:', clf_rf.score(X_test, Y_test))
 
-	results = clf.predict(X_test)
-	# for i, res in enumerate(results):
-	# 	print(res, Y_test[i])
-	plot_confusion_matrix(Y_test, preds, classes, normalize=False, title=title)
+	# Plot confusion matrices
+	classes = ['relative in imagenet', 'in imagenet', 'parent in imagenet', 'not in imagenet']
+	title = 'CM for SVM, features=1000 len. conf. vector per image'
+	plot_confusion_matrix(Y_test, preds_svc, classes, normalize=False, title=title)
+	title = 'CM for RF, features=1000 len. conf. vector per image'
+	plot_confusion_matrix(Y_test, preds_rf, classes, normalize=False, title=title)
 	

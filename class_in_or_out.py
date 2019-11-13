@@ -135,8 +135,8 @@ if __name__ == '__main__':
 		plt.xticks(np.arange(0,-1))
 		message = 'Top ' + str(n) + ' labels (' + str(n) + 'th to 1st most common)'
 		plt.xlabel(message)
-		plt.ylabel('Label Confidence (%)')
-		plt.title('Birds: Label confidence for in vs out class')
+		plt.ylabel('Label Frequency (%)')
+		plt.title('Birds: Label frequency for in vs out class')
 
 		# Plot the distribution for the top n labels split by group (in, not in, par, rel)
 		for data in [is_in, not_in, rels, par]:
