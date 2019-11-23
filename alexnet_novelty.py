@@ -251,7 +251,7 @@ def test_inat(root_path, model, imagenet_labels):
 	for typename in os.listdir(root_path):
 		# Create directories if they don't already exist
 		try:
-			os.mkdir(os.getcwd() + '/alexnet_inat_results/' + typename + '/')
+			os.mkdir(os.getcwd() + '/resnet18_inat_results/' + typename + '/')
 		except:
 			continue
 		
@@ -280,20 +280,9 @@ def test_inat(root_path, model, imagenet_labels):
 				iNat_results['vals'] = None
 				pass
 		
-			fname = 'alexnet_inat_results/' + typename + '/' + classname + '.json'
+			fname = 'resnet18_inat_results/' + typename + '/' + classname + '.json'
 			with open(fname, 'w') as outfile:
 				json.dump(iNat_results, outfile)
-
-	
-def load_json(filename):
-	df = pd.DataFrame(columns=['Kingdom', 'Class','Common Name','Relation to Imagnet'])
-	with open(filename) as json_file:
-		data = json.load(json_file)
-		for kingdom in data:
-			for a in data[kingdom]:
-				df.loc[len(df)] = [kingdom, a, None, None]
-
-	df.to_csv('in_out_class.csv')
 
 
 if __name__ == '__main__':
@@ -302,6 +291,7 @@ if __name__ == '__main__':
 
 	# Load pretrained Alexnet
 	alexnet = models.alexnet(pretrained=True)
+	resnet18 = models.resnet18(pretrained=True)
 	# print(alexnet)
 
 	# Load imagenet labels as dictionary
@@ -326,6 +316,6 @@ if __name__ == '__main__':
 	# path = test_path + '/Plantae/Woodwardia areolata/'
 	# path = test_path + '/Plantae/Quercus agrifolia/'
 
-	test_inat(test_path, alexnet, imagenet_labels)
+	test_inat(test_path, resnet18, imagenet_labels)
 
 	

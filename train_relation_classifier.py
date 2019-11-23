@@ -101,7 +101,10 @@ if __name__ == '__main__':
 	# Load dataframe of inaturalist annotations
 	df = pd.read_csv('in_out_class.csv')
 
-	labeled_data = df[df['Biological Group']=='Aves']
+	species = 'Aves'
+	save_path = 'C:/Users/noam_/Documents/Cornell/CS7999/11_25_19/alexnet_1000conf_more_data/'
+
+	labeled_data = df[df['Biological Group']==species]
 	labeled_data = labeled_data[labeled_data['Annotator'].notnull()]
 
 	# Collect feature vectors and labels
@@ -148,6 +151,7 @@ if __name__ == '__main__':
 			
 				# Add to training data
 				X.append(list(c_sorted))
+				# X.append([max(c_sorted)])		# Only train on top confidence value
 				Y.append(row['Relation to Imagenet'])
 				XClasses.append(i)
 				img_names.append(im)
@@ -157,6 +161,7 @@ if __name__ == '__main__':
 	X = np.array(X)
 	Y = np.array(Y)
 	print(X.shape, Y.shape)
+
 	# Split the data
 	# X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=42)	# Split by image
 	X_train_ids, X_test_ids, Y_train_ids, Y_test_ids = train_test_split(classIDs, classIDs, test_size=0.33, random_state=42)		# Split by class
@@ -179,7 +184,7 @@ if __name__ == '__main__':
 			Y_test.append(Y[i])
 			test_imgs.append(img_names[i])
 
-	print(len(X_train), len(X_train[0]), len(Y_train))
+	# print(len(X_train), len(X_train[0]), len(Y_train))
 	assert(len(test_imgs) == len(X_test) and len(train_imgs) == len(X_train))
 
 	# Train linear classifier
@@ -189,8 +194,7 @@ if __name__ == '__main__':
 	print('SVM:', clf_svc.score(X_test, Y_test))
 
 	# Save SVM results:
-	path = 'C:/Users/noam_/Documents/Cornell/CS7999/11_18_19/split by class/'
-	with open(path+'aves_svm_results.txt', 'w') as f:
+	with open(save_path+species+'_svm_results.txt', 'w') as f:
 		f.write('ImageID\t Actual\t Prediction\n')
 		for i, p in enumerate(preds_svc):
 			line = test_imgs[i]+'\t'+Y_test[i]+'\t'+p+'\n'
@@ -203,7 +207,7 @@ if __name__ == '__main__':
 	print('Random Forest:', clf_rf.score(X_test, Y_test))
 	
 	# Save RF results:
-	with open(path+'aves_rf_results.txt', 'w') as f:
+	with open(save_path+species+'_rf_results.txt', 'w') as f:
 		f.write('ImageID\t Actual\t Prediction\n')
 		for i, p in enumerate(preds_rf):
 			line = test_imgs[i]+'\t'+Y_test[i]+'\t'+p+'\n'
@@ -211,8 +215,8 @@ if __name__ == '__main__':
 
 	# Plot confusion matrices
 	classes = ['relative in imagenet', 'in imagenet', 'parent in imagenet', 'not in imagenet']
-	title = 'CM for SVM, features=1000 len. conf. vector per image'
+	title = 'CM for SVM, features=top conf. value per image'
 	plot_confusion_matrix(Y_test, preds_svc, classes, normalize=True, title=title)
-	title = 'CM for RF, features=1000 len. conf. vector per image'
+	title = 'CM for RF, features=top conf. value per image'
 	plot_confusion_matrix(Y_test, preds_rf, classes, normalize=True, title=title)
 	
