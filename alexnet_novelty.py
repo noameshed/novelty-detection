@@ -14,7 +14,6 @@ def test_images(image_path, labels, model):
 	Returns:
 		results dictionary with all results (i.e. the confidence of all possible labels)
 	'''
-
 	df = pd.DataFrame(columns = ['Label index','Class','Image Name','Confidence'])
 	results = {}
 	for image in os.listdir(image_path):
@@ -25,7 +24,6 @@ def test_images(image_path, labels, model):
 
 		# Test on image
 		out = test_one_image(img, model)
-		
 		val, index = torch.max(out,1)			# get the top 1 result
 
 		to_sort = torch.argsort(out).numpy().flatten()
@@ -33,6 +31,11 @@ def test_images(image_path, labels, model):
 
 		confidence = torch.nn.functional.softmax(out, dim=1)[0]*100
 		conf_sorted = confidence[to_sort]
+
+		# Next 3 lines from https://www.learnopencv.com/pytorch-for-beginners-image-classification-using-pre-trained-models/
+		# _, indices = torch.sort(out, descending=True)
+		# percentage = torch.nn.functional.softmax(out, dim=1)[0] * 100
+		# [(labels[idx], percentage[idx].item()) for idx in indices[0][:5]]
 
 		df.loc[len(df)] = [index.item(),labels[str(index.item())][1], 
 			labels[str(index.item())][0], confidence[index].item()]
@@ -52,7 +55,6 @@ def test_one_image(img, model):
 
 	# Test on image
 	out = model(batch_t)				# shape ([1, 1000])
-
 	return out
 
 def plot_all_labels(table, title=None, save=None, showplot=False):
@@ -245,16 +247,15 @@ def get_most_common_labels(table, n):
 
 	return unique_labels[to_sort][-n:], label_conf[to_sort][-n:], label_counts[to_sort][-n:]
 
-	
 def test_inat(root_path, model, imagenet_labels):
 	# Loop through each biological group
 	for typename in os.listdir(root_path):
 		# Create directories if they don't already exist
 		try:
-			os.mkdir(os.getcwd() + '/resnet18_inat_results/' + typename + '/')
+			os.mkdir(os.getcwd() + '/alexnet_inat_results/' + typename + '/')
 		except:
 			continue
-		
+
 		# Loop through each class in the group
 		for classname in tqdm(os.listdir(root_path+typename+'/')):
 			iNat_results = {}
@@ -280,7 +281,7 @@ def test_inat(root_path, model, imagenet_labels):
 				iNat_results['vals'] = None
 				pass
 		
-			fname = 'resnet18_inat_results/' + typename + '/' + classname + '.json'
+			fname = 'alexnet_inat_results/' + typename + '/' + classname + '.json'
 			with open(fname, 'w') as outfile:
 				json.dump(iNat_results, outfile)
 
@@ -295,8 +296,10 @@ if __name__ == '__main__':
 	# print(alexnet)
 
 	# Load imagenet labels as dictionary
-	f = open('D:/noam_/Cornell/CS7999/imagenet_class_index.json', 'r')
-	imagenet_labels = json.load(f)
+	# with open('D:/noam_/Cornell/CS7999/imagenet_class_index.json', 'r') as f:
+	# 	imagenet_labels = [line.strip() for line in f.readlines()]
+	with open('D:/noam_/Cornell/CS7999/imagenet_class_index.json', 'r') as f:
+		imagenet_labels = json.load(f)
 
 	# Transform for input images
 	transform = transforms.Compose([
@@ -316,6 +319,6 @@ if __name__ == '__main__':
 	# path = test_path + '/Plantae/Woodwardia areolata/'
 	# path = test_path + '/Plantae/Quercus agrifolia/'
 
-	test_inat(test_path, resnet18, imagenet_labels)
+	test_inat(test_path, alexnet, imagenet_labels)
 
 	
