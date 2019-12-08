@@ -8,7 +8,86 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def test_images(image_path, labels, model):
+def setup_bbox():
+	# Taken from https://github.com/daviswer/fewshotlocal/blob/master/Setup.ipynb
+
+	annopath = 'D:/noam_/Cornell/CS7999/iNaturalist/train_2017_bboxes.json'
+	with open(annopath) as f:
+		allinfo = json.load(f)
+	annolist = allinfo['annotations']
+	imagelist = allinfo['images']
+
+	imgdict = dict()	# image path to id number
+	for d in imagelist:
+		path = d['file_name'][17:]
+		imgdict[path] = d['id']
+
+	annodict = dict() # im name to list of box_ids
+	boxdict = dict() # box_id to box coords
+	catdict = dict() # dict of numerical category codes / labels to corresponding list of image ids
+	for d in annolist:
+		im = d['image_id']
+		boxid = d['id']
+		cat = d['category_id']
+		
+		# Add box_id to image entry
+		if im in annodict:
+			annodict[im].append(boxid)
+		else:
+			annodict[im] = [boxid]
+			
+		# Add mapping from box_id to box
+		boxdict[im] = d['bbox']
+		
+		# Add image to category set
+		if cat in catdict:
+			catdict[cat].add(im)
+		else:
+			catdict[cat] = set([im])
+    
+	print("Built annotation dictionaries")
+	return annodict, boxdict, catdict, imgdict
+
+
+def extract_bbox(img, impath, annodict, boxdict, catdict, imgdict):
+	# Takes in an image and returns the resulting extracted bounding box region
+	# Snippets taken from https://github.com/daviswer/fewshotlocal/blob/master/helpful_files/training.py
+	splitpath = impath.split('/')
+	shortpath = ''
+	for i in range(-3,0):	# Extract the shortened path name used as the dictionary key in imgdict
+		shortpath += splitpath[i] + '/'
+	shortpath = shortpath[:-1]
+
+	if shortpath not in imgdict:
+		return None
+
+	# Calculate the minimum and maximum coordinates of the bounding box in the image
+	ID = imgdict[shortpath]		
+	box = boxdict[ID]
+	xmin = box[0]
+	xmax = box[2]+xmin
+	ymin = box[1]
+	ymax = box[3]+ymin
+	xmin_int = int(xmin)
+	xmax_int = int(xmax)+1
+	ymin_int = int(ymin)
+	ymax_int = int(ymax)+1
+
+	# Crop the image to the bbox area
+	img = np.array(img)
+	img_box = img[ymin_int:ymax_int, xmin_int:xmax_int,:]
+
+	# Uncomment to show bounded images
+	# f = plt.figure()
+	# f.add_subplot(1,2,1)
+	# plt.imshow(img)
+	# f.add_subplot(1,2,2)
+	# plt.imshow(img_box)
+	# plt.show(block=True)
+
+	return img_box
+
+def test_images(image_path, labels, model, annodict, boxdict, catdict, imgdict):
 	'''
 	Tests all images in the image_path with the provided model.
 	Returns:
@@ -21,7 +100,9 @@ def test_images(image_path, labels, model):
 
 		# Load input image
 		img = Image.open(image_path+image)	
+		img = img.convert('RGB')
 
+		img_bboxed = extract_bbox(img, image_path + image, annodict, boxdict, catdict, imgdict)
 		# Test on image
 		out = test_one_image(img, model)
 		val, index = torch.max(out,1)			# get the top 1 result
@@ -248,11 +329,12 @@ def get_most_common_labels(table, n):
 	return unique_labels[to_sort][-n:], label_conf[to_sort][-n:], label_counts[to_sort][-n:]
 
 def test_inat(root_path, model, imagenet_labels):
+	annodict, boxdict, catdict, imgdict = setup_bbox()	# Set up bounding box annotations
 	# Loop through each biological group
 	for typename in os.listdir(root_path):
 		# Create directories if they don't already exist
 		try:
-			os.mkdir(os.getcwd() + '/alexnet_inat_results/' + typename + '/')
+			os.mkdir(os.getcwd() + '/alexnet_inat_results_bbox/' + typename + '/')
 		except:
 			continue
 
@@ -261,34 +343,34 @@ def test_inat(root_path, model, imagenet_labels):
 			iNat_results = {}
 			path = root_path+typename+'/'+classname+'/'
 
-			try:
-				table, dic = test_images(path, imagenet_labels, model)
+			# try:
+			table, dic = test_images(path, imagenet_labels, model, annodict, boxdict, catdict, imgdict)
 
-				labels, confs, counts = get_most_common_labels(table, 0)	# get all results
-				
-				to_sort = np.argsort(counts)
-				# Dictionary version, all results for each picture
-				for im in dic:
-					iNat_results[im] = {}
-					iNat_results[im]['labels'] = list(dic[im]['labels'])
-					iNat_results[im]['vals'] = list(dic[im]['vals'])
-					iNat_results[im]['confs'] = list(dic[im]['confs'])
+			labels, confs, counts = get_most_common_labels(table, 0)	# get all results
+			
+			to_sort = np.argsort(counts)
+			# Dictionary version, all results for each picture
+			for im in dic:
+				iNat_results[im] = {}
+				iNat_results[im]['labels'] = list(dic[im]['labels'])
+				iNat_results[im]['vals'] = list(dic[im]['vals'])
+				iNat_results[im]['confs'] = list(dic[im]['confs'])
 
-			except:
-				message = typename + ',' + classname
-				iNat_results['labs'] = None
-				iNat_results['confs'] = None
-				iNat_results['vals'] = None
-				pass
+			# except:
+			# 	message = typename + ',' + classname
+			# 	iNat_results['labs'] = None
+			# 	iNat_results['confs'] = None
+			# 	iNat_results['vals'] = None
+			# 	pass
 		
-			fname = 'alexnet_inat_results/' + typename + '/' + classname + '.json'
+			fname = 'alexnet_inat_results_bbox/' + typename + '/' + classname + '.json'
 			with open(fname, 'w') as outfile:
 				json.dump(iNat_results, outfile)
 
 
 if __name__ == '__main__':
 	# print(dir(models))
-	test_path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/'
+	image_path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/'
 
 	# Load pretrained Alexnet
 	alexnet = models.alexnet(pretrained=True)
@@ -319,6 +401,6 @@ if __name__ == '__main__':
 	# path = test_path + '/Plantae/Woodwardia areolata/'
 	# path = test_path + '/Plantae/Quercus agrifolia/'
 
-	test_inat(test_path, alexnet, imagenet_labels)
+	test_inat(image_path, alexnet, imagenet_labels)
 
 	
