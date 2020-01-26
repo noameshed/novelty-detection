@@ -48,7 +48,6 @@ def setup_bbox():
 	print("Built annotation dictionaries")
 	return annodict, boxdict, catdict, imgdict
 
-
 def extract_bbox(img, impath, annodict, boxdict, catdict, imgdict):
 	# Takes in an image and returns the resulting extracted bounding box region
 	# Snippets taken from https://github.com/daviswer/fewshotlocal/blob/master/helpful_files/training.py
@@ -102,7 +101,9 @@ def test_images(image_path, labels, model, annodict, boxdict, catdict, imgdict):
 		img = Image.open(image_path+image)	
 		img = img.convert('RGB')
 
-		img_bboxed = extract_bbox(img, image_path + image, annodict, boxdict, catdict, imgdict)
+		if annodict is not None:
+			img = extract_bbox(img, image_path + image, annodict, boxdict, catdict, imgdict)
+		
 		# Test on image
 		out = test_one_image(img, model)
 		val, index = torch.max(out,1)			# get the top 1 result
@@ -138,7 +139,74 @@ def test_one_image(img, model):
 	out = model(batch_t)				# shape ([1, 1000])
 	return out
 
-def plot_all_labels(table, title=None, save=None, showplot=False):
+def get_most_common_labels(table, n):
+	'''
+	Gets the n most common labels for the given class
+	'''	
+	# Which classes were labelled?
+	all_labels = table['Class']
+	all_conf = table['Confidence']
+	unique_labels = np.unique(all_labels)
+	
+	# Plot the chosen labels by their frequency
+	label_counts = np.zeros(len(unique_labels))
+	label_conf = np.zeros(len(unique_labels))
+	for i, l in enumerate(unique_labels):
+		label_counts[i] = np.sum(all_labels == l)
+		conf = all_conf[all_labels==l]
+		avg_conf = sum(conf)/len(conf)
+		label_conf[i] = avg_conf
+
+	# Sort the data and return the top n
+	to_sort = np.argsort(label_counts)
+
+	return unique_labels[to_sort][-n:], label_conf[to_sort][-n:], label_counts[to_sort][-n:]
+
+def test_inat(root_path, savefile, model, imagenet_labels, bbox = False):
+	# Set up bounding box annotations for iNaturalist images
+	if bbox:
+		annodict, boxdict, catdict, imgdict = setup_bbox()	
+	else:
+		annodict=None; boxdict=None; catdict=None; imgdict=None
+
+	# Loop through each biological group
+	for typename in os.listdir(root_path):
+		# Create directories if they don't already exist
+		try:
+			os.mkdir(os.getcwd() + '/alexnet_birdvid_results/' + typename + '/')
+		except:
+			continue
+
+		# Loop through each class in the group
+		for classname in tqdm(os.listdir(root_path+typename+'/')):
+			iNat_results = {}
+			path = root_path+typename+'/'+classname+'/'
+
+			# try:
+			table, dic = test_images(path, imagenet_labels, model, annodict, boxdict, catdict, imgdict)
+
+			labels, confs, counts = get_most_common_labels(table, 0)	# get all results
+			
+			to_sort = np.argsort(counts)
+			# Dictionary version, all results for each picture
+			for im in dic:
+				iNat_results[im] = {}
+				iNat_results[im]['labels'] = list(dic[im]['labels'])
+				iNat_results[im]['vals'] = list(dic[im]['vals'])
+				iNat_results[im]['confs'] = list(dic[im]['confs'])
+
+			# except:
+			# 	message = typename + ',' + classname
+			# 	iNat_results['labs'] = None
+			# 	iNat_results['confs'] = None
+			# 	iNat_results['vals'] = None
+			# 	pass
+
+			with open(savefile+typename+'/'+classname+'.json', 'w') as outfile:
+				json.dump(iNat_results, outfile)
+
+#### Plotting functions - obsolete, see plot_result_distribution.py
+def plot_all_labels(table, title=None, save=None, showplot=True):
 	'''
 	Creates a plot of the label distribution in the provided table
 	'''
@@ -305,77 +373,16 @@ def plot_split_label_conf(table, title=None, showplot=False):
 	plt.close()
 	return plt
 
-def get_most_common_labels(table, n):
-	'''
-	Gets the n most common labels for the given class
-	'''	
-	# Which classes were labelled?
-	all_labels = table['Class']
-	all_conf = table['Confidence']
-	unique_labels = np.unique(all_labels)
-	
-	# Plot the chosen labels by their frequency
-	label_counts = np.zeros(len(unique_labels))
-	label_conf = np.zeros(len(unique_labels))
-	for i, l in enumerate(unique_labels):
-		label_counts[i] = np.sum(all_labels == l)
-		conf = all_conf[all_labels==l]
-		avg_conf = sum(conf)/len(conf)
-		label_conf[i] = avg_conf
-
-	# Sort the data and return the top n
-	to_sort = np.argsort(label_counts)
-
-	return unique_labels[to_sort][-n:], label_conf[to_sort][-n:], label_counts[to_sort][-n:]
-
-def test_inat(root_path, model, imagenet_labels):
-	annodict, boxdict, catdict, imgdict = setup_bbox()	# Set up bounding box annotations
-	# Loop through each biological group
-	for typename in os.listdir(root_path):
-		# Create directories if they don't already exist
-		try:
-			os.mkdir(os.getcwd() + '/alexnet_inat_results_bbox/' + typename + '/')
-		except:
-			continue
-
-		# Loop through each class in the group
-		for classname in tqdm(os.listdir(root_path+typename+'/')):
-			iNat_results = {}
-			path = root_path+typename+'/'+classname+'/'
-
-			# try:
-			table, dic = test_images(path, imagenet_labels, model, annodict, boxdict, catdict, imgdict)
-
-			labels, confs, counts = get_most_common_labels(table, 0)	# get all results
-			
-			to_sort = np.argsort(counts)
-			# Dictionary version, all results for each picture
-			for im in dic:
-				iNat_results[im] = {}
-				iNat_results[im]['labels'] = list(dic[im]['labels'])
-				iNat_results[im]['vals'] = list(dic[im]['vals'])
-				iNat_results[im]['confs'] = list(dic[im]['confs'])
-
-			# except:
-			# 	message = typename + ',' + classname
-			# 	iNat_results['labs'] = None
-			# 	iNat_results['confs'] = None
-			# 	iNat_results['vals'] = None
-			# 	pass
-		
-			fname = 'alexnet_inat_results_bbox/' + typename + '/' + classname + '.json'
-			with open(fname, 'w') as outfile:
-				json.dump(iNat_results, outfile)
-
+####
 
 if __name__ == '__main__':
 	# print(dir(models))
 	image_path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/'
+	# image_path = 'D:/noam_/Cornell/CS7999/Macaulay Library Birds - Frames/'
+	save_path = os.getcwd() + '/alexnet_birdvid_results/' 
 
 	# Load pretrained Alexnet
 	alexnet = models.alexnet(pretrained=True)
-	resnet18 = models.resnet18(pretrained=True)
-	# print(alexnet)
 
 	# Load imagenet labels as dictionary
 	# with open('D:/noam_/Cornell/CS7999/imagenet_class_index.json', 'r') as f:
@@ -393,14 +400,7 @@ if __name__ == '__main__':
 			std=[0.229, 0.224, 0.225]
 		)])
 	
-
-	# path = test_path + '/Plantae/Rosa californica/'
-	# path = test_path + '/Reptilia/Terrapene carolina/'
-	# path = test_path + '/Mollusca/Limacia cockerelli/'
-	# path = test_path + '/Aves/Spheniscus demersus/'
-	# path = test_path + '/Plantae/Woodwardia areolata/'
-	# path = test_path + '/Plantae/Quercus agrifolia/'
-
-	test_inat(image_path, alexnet, imagenet_labels)
+	# Test the image from iNaturalist
+	test_inat(image_path, save_path, alexnet, imagenet_labels, bbox=False)
 
 	
