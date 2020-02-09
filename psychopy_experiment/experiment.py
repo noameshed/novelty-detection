@@ -41,13 +41,14 @@ globalClock = core.Clock()
 trialClock = core.Clock()
 
 # display instructions and wait
-msg1 = visual.TextStim(win, pos=[0.5, 0.1], height = 0.03,
+msg1 = visual.TextStim(win, pos=[-.5,0.3], units='norm', height = 0.08, alignHoriz='left',
     text="You will be shown two images. \n\n\
 Choose a value (1-8) on the scale to describe how similar they are.\n\n\
 1 is least similar and 8 is most similar. \n\n\
 Use the 1-8 keyboard keys to select the value. Then press Enter.")
 
-msg2 = visual.TextStim(win, pos=[0.5, -0.2], height=0.03, text='Hit any key when you are ready to begin.')
+msg2 = visual.TextStim(win, pos=[-.5, -0.3],units='norm', height=0.08, alignHoriz='left',
+	text='Hit any key when you are ready to begin.')
 
 msg1.draw()
 msg2.draw()
@@ -71,7 +72,7 @@ for i in range(50): # will continue the staircase until it terminates!
     rightIm = visual.ImageStim(win, image=impath+B+'/'+choice2, 
         flipHoriz=True, pos=(10,3), units='deg', size=(10,10))
 
-    msg = visual.TextStim(win, pos=[0.5, 0.3], height=0.02, alignHoriz='center',
+    msg = visual.TextStim(win, pos=[0, 0.6], units='norm', height=0.06, alignHoriz='center',
         text="Rate how similar the two images below are on a scale from 1-8. Then press Enter.")
 
     #rating = visual.RatingScale(win=win, name='rating', marker='triangle', 
@@ -80,11 +81,11 @@ for i in range(50): # will continue the staircase until it terminates!
     rating = visual.RatingScale(win=win,pos=[0, -.4], low=1, high=8, respKeys=['1','2','3','4','5','6','7','8'],
         acceptKeys=['return', 'space'], showAccept=False, textColor=[0.2,0.2,0.2] )
 
-    labels = visual.TextStim(win, pos=[0.72,-.22], height=0.02, alignHoriz='center',
-        text="1         2        3         4        5        6        7        8")
+    labels = visual.TextStim(win, pos=[0,-.45], units='norm', height=0.06, alignHoriz='center',
+        text="1        2       3        4       5       6       7       8")
     
-    least_sim = visual.TextStim(win, pos=[0.5, -.22], height=.02, text='very different')
-    most_sim = visual.TextStim(win, pos=[1.35, -.22], height=.02, text='very similar')
+    least_sim = visual.TextStim(win, pos=[-.5, -.45], units='norm',	height=.06, text='very different')
+    most_sim = visual.TextStim(win, pos=[.5, -.45], units='norm',	height=.06, text='very similar')
     rating.reset()
 
 
