@@ -17,26 +17,26 @@ class BirdSimExp():
         self.impath = self.path + '/images/'
         self.all_birds = os.listdir(self.impath)
 
-        # make a text file to save data
+        # Make a text file to save data
         fileName = self.expInfo['ID'] + self.expInfo['dateStr']
         self.dataFile = open(self.path+'/data/'+fileName+'.csv', 'w+')  # a simple text file with comma-separated-values
         self.dataFile.write('leftIm,rightIm,userChoice,responseTime\n')
 
-        # create window
+        # Create window
         user32 = ctypes.windll.user32
-        res = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+        res = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)    # Get monitor dimensions
         self.win = visual.Window([res[0], res[1]], allowGUI=True, color=[0.2,0.2,0.2],
-                monitor='testMonitor', units='height')
+                monitor='testMonitor', units='cm', fullscr=True)
 
         # Define the rating scale parameters
-        self.scaleMsg = visual.TextStim(self.win, pos=[0.5, 0.3], height=0.02, alignHoriz='center',
+        self.scaleMsg = visual.TextStim(self.win, pos=[0,10], height=1, alignHoriz='center', wrapWidth=40,           #[0.5, 0.3]
                 text="Rate how similar the two images below are on a scale from 1-7. Then press Enter.")
-        self.rating = visual.RatingScale(self.win,pos=[0, -.4], low=1, high=7, respKeys=['1','2','3','4','5','6','7'],
+        self.rating = visual.RatingScale(self.win,pos=[0,-.3], low=1, high=7, respKeys=['1','2','3','4','5','6','7'],      #[0, -.4]
                 acceptKeys=['return', 'space'], showAccept=False, textColor=[0.2,0.2,0.2] )
-        self.labels = visual.TextStim(self.win, pos=[0.72,-.22], height=0.02, alignHoriz='center',
+        self.labels = visual.TextStim(self.win, pos=[0,-6], height=.8, alignHoriz='center', wrapWidth=40,            # [0.72,-.22], 0.02
                 text="1           2          3          4          5          6          7")
-        self.diff_label = visual.TextStim(self.win, pos=[0.5, -.22], height=.02, text='very different')
-        self.sim_label = visual.TextStim(self.win, pos=[1.35, -.22], height=.02, text='very similar')
+        self.diff_label = visual.TextStim(self.win, pos=[-14,-6], height=.8, text='very different')        # [0.5, -.22]
+        self.sim_label = visual.TextStim(self.win, pos=[14,-6], height=.8, text='very similar')         #[1.35, -.22]
 
     def quit(self):
         # Close the data file
@@ -68,55 +68,34 @@ class BirdSimExp():
         return expInfo
 
     def instructions(self):
-        
         # display instructions and wait
-        msg1 = visual.TextStim(self.win, pos=[0.5, 0.1], height = 0.03,
-            text="In this experiment, you will be shown pairs of images. \n\nChoose a value (1-7) on the scale to describe how similar they are.\n\n1 is least similar and 7 is most similar. \n\nUse the 1-7 keyboard keys to select the value. Then press Enter.")
+        h = 1
+        w = 40
+        msg1 = visual.TextStim(self.win, pos=[0, 0], height=h, wrapWidth=w,                 # [0.5, 0.1]    0.03
+            text=
+            "In this experiment, you will be shown pairs of images.\n\n\
+Choose a value (1-7) on the scale to describe how similar they are.\n\n\
+1 is least similar and 7 is most similar. Use the 1-7 keyboard keys to select the value.\n\n\
+Then press Enter. Press any key when you are ready to begin.")
 
-        msg2 = visual.TextStim(self.win, pos=[0.5, -0.2], height=0.03, text='Press any key when you are ready to begin.')
-
+        msg2 = visual.TextStim(self.win, pos=[0, 3], height=h, wrapWidth=w,
+            text="Choose a value (1-7) on the scale to describe how similar they are.")
+        msg3 = visual.TextStim(self.win, pos=[0, 1], height=h, wrapWidth=w, 
+            text="1 is least similar and 7 is most similar.")
+        msg4 = visual.TextStim(self.win, pos=[0, -1], height=h, wrapWidth=w, 
+            text="Use the 1-7 keyboard keys to select the value. Then press Enter.")
+        msg5 = visual.TextStim(self.win, pos=[0, -3], height=h, wrapWidth=w, 
+            text='Press any key when you are ready to begin.')
+        
         msg1.draw()
-        msg2.draw()
+        #self.drawAll(msg1, msg2, msg3, msg4, msg5)
 
-        self.win.flip()  #to show the messages
-        #pause until there's a keypress
-        event.waitKeys()
+        self.win.flip()     # to show the messages
+        event.waitKeys()    # pause until there's a keypress
 
-    def practiceRound(self, n):
-        # Run a few practice rounds for calibration
-        msg1 = visual.TextStim(self.win, pos=[.5, 0.1], height=0.03,
-            text="You will now do a practice round. You will see pairs of images and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
-
-        msg1.draw()
-        self.win.flip()
-        event.waitKeys()
-
-        for i in range(n):
-            # choose 2 random images of 2 types of birds
-            [A, B] = random.sample(self.all_birds, 2)
-            choice1 = random.choice(os.listdir(self.impath+A))
-            choice2 = random.choice(os.listdir(self.impath+B))
-
-            leftIm = visual.ImageStim(self.win, image=self.impath+A+'/'+choice1, 
-                flipHoriz=True, pos=(-10,3), units='deg', size=(10,10))
-
-            rightIm = visual.ImageStim(self.win, image=self.impath+B+'/'+choice2, 
-                flipHoriz=True, pos=(10,3), units='deg', size=(10,10))    
-            
-            self.rating.reset()
-
-            # Wait for participant response
-            while self.rating.noResponse:
-                self.drawAll(leftIm, rightIm, self.scaleMsg, self.rating, 
-                    self.labels, self.diff_label, self.sim_label, self.win)
-
-                # Close the window if they hit 'escape'
-                if event.getKeys(['escape']):
-                    core.quit()
-
-    def recordedTrials(self, n):
+    def trials(self, n, writeData):
         # Show messages telling the participant they are about to begin the real experiment
-        msg1 = visual.TextStim(self.win, pos=[.5, 0.1], height=0.03,
+        msg1 = visual.TextStim(self.win, pos=[0,0], height=1, wrapWidth=40,      # pos=[.5, 0.1], height=0.03,
             text="You will now begin the experiment. You will see pairs of images and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
 
         msg1.draw()
@@ -144,14 +123,16 @@ class BirdSimExp():
             # Wait for participant response
             while self.rating.noResponse:
                 self.drawAll(leftIm, rightIm, self.scaleMsg, self.rating, 
-                    self.labels, self.diff_label, self.sim_label, self.win)
+                    self.labels, self.diff_label, self.sim_label)
+                self.win.flip()
 
                 # Close the window if they hit 'escape'
                 if event.getKeys(['escape']):
                     core.quit()
                     
             t1 = timer.getTime()
-            self.dataFile.write('%s,%s,%s,%s\n' %(A+'/'+choice1, B+'/'+choice2, self.rating.getRating(), t1-t0))
+            if writeData:
+                self.dataFile.write('%s,%s,%s,%s\n' %(A+'/'+choice1, B+'/'+choice2, self.rating.getRating(), t1-t0))
 
     def drawAll(self, *argv):
         for arg in argv:
@@ -160,8 +141,8 @@ class BirdSimExp():
 if __name__ == '__main__': 
     b = BirdSimExp()
     b.instructions()
-    b.practiceRound(15)
-    b.recordedTrials(200)
+    b.trials(15, False)     # Run warmup trials (not recorded)
+    b.trials(200, True)     # Run experiment trials (recorded)
     b.quit()
 
     
