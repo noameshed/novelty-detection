@@ -4,7 +4,7 @@ Psychopy experiment for image selection
 """
 from psychopy import core, visual, gui, data, event, monitors
 from psychopy.tools.filetools import fromFile, toFile
-import numpy, random, os, ctypes
+import numpy, random, os, ctypes, csv
 
 class BirdSimExp():
 
@@ -16,15 +16,18 @@ class BirdSimExp():
         else:
             self.prompt = 'birds'
 
-        # Initialize path for bird images
+        # Initialize paths for bird images and scores
         self.path = os.getcwd()
-        self.impath = self.path + '/images/'
+        self.impath = self.path + '/images/Aves/'
+        self.scorepath = self.path + '/stratified_img_pairs/'
         self.all_birds = os.listdir(self.impath)
+        self.pairScores = os.listdir(self.scorepath)
 
-        # Make a new text file to save data
+        # Make a new csv and txt files to save data
         fileName = self.expInfo['Participant ID'] + '_PT=' + str(prompt_type) + '_' + self.expInfo['dateStr']
         self.dataFile = open(self.path+'/data/'+fileName+'.csv', 'w+')  # a simple text file with comma-separated-values
         self.dataFile.write('leftIm,rightIm,userChoice,responseTime\n')
+        self.surveyFile = open(self.path+'/data/'+fileName+'.txt', 'w+')
 
         # Create a window using the monitor's dimensions
         user32 = ctypes.windll.user32
@@ -75,6 +78,29 @@ Then press Enter. Press any key when you are ready to begin.")
         self.win.flip()     # to show the messages
         event.waitKeys()    # pause until there's a keypress
 
+    def getBirdPair(self):
+        # Select a pair of birds to show the participant
+        # Randomly select a difference bin to choose from
+        fname = numpy.random.choice(self.pairScores)
+        with open(self.scorepath+fname, 'r') as f:
+            reader = csv.reader(f)
+            data = list(reader)
+            data = data[1:]     # Remove header row
+
+            # Randomly select a pair of birds
+            row = numpy.random.choice(data)
+            A = row[1].split('_')[0]
+            B = row[2].split('_')[0]
+
+            # Get the paths to the bird images
+            #[A, B] = random.sample(self.all_birds, 2)
+            path1 = self.impath + A + '.jpg'
+            path2 = self.impath + B + '.jpg'
+
+        # Randomize the order in which the images are shown
+
+        return path1, path2
+
     def trials(self, n, writeData):
         # Show message telling the participant they are starting a warmup trial
         msg = visual.TextStim(self.win, pos=[0,0], height=1, wrapWidth=40,
@@ -92,14 +118,12 @@ Then press Enter. Press any key when you are ready to begin.")
 
         for i in range(n): # 200 birds is about 10 minutes
             # choose 3 random images of 3 types of birds
-            [A, B] = random.sample(self.all_birds, 2)
-            choice1 = random.choice(os.listdir(self.impath+A))
-            choice2 = random.choice(os.listdir(self.impath+B))
+            path1, path2 = self.getBirdPair()
 
             # Create the two image objects
-            leftIm = visual.ImageStim(self.win, image=self.impath+A+'/'+choice1, 
+            leftIm = visual.ImageStim(self.win, image=path1, 
                 flipHoriz=True, pos=(-10,3), units='deg', size=(10,10))
-            rightIm = visual.ImageStim(self.win, image=self.impath+B+'/'+choice2, 
+            rightIm = visual.ImageStim(self.win, image=path2, 
                 flipHoriz=True, pos=(10,3), units='deg', size=(10,10))
 
             self.rating.reset()
@@ -169,7 +193,8 @@ Then press Enter. Press any key when you are ready to begin.")
             self.drawAll(title, prompt, msg, box)
             self.win.flip()
 
-        return txt
+        # Save response into text file:
+        self.surveyFile.write(txt)
 
     def thankyou(self):
         # display end-of-experiment message
@@ -183,8 +208,9 @@ Then press Enter. Press any key when you are ready to begin.")
         self.quit()
 
     def quit(self):
-        # Close the data file
+        # Close the data files
         self.dataFile.close()
+        self.surveyFile.close()
 
         # Clear the screen
         self.win.flip()
@@ -205,4 +231,3 @@ if __name__ == '__main__':
     b.trials(15, False)     # Run warmup trials (not recorded)
     b.trials(200, True)     # Run experiment trials (recorded)
     b.survey()
-    
