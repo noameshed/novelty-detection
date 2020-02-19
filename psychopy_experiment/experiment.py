@@ -23,6 +23,16 @@ class BirdSimExp():
         self.all_birds = os.listdir(self.impath)
         self.pairScores = os.listdir(self.scorepath)
 
+        # Open data files
+        self.data = []
+        for i in range(len(os.listdir(self.scorepath))):
+            self.data.append([])
+
+        for i, f in enumerate(os.listdir(self.scorepath)):
+            with open(self.scorepath + f, 'r') as fopen:
+                for line in fopen:
+                    self.data[i].append(line)
+            
         # Make a new csv and txt files to save data
         fileName = self.expInfo['Participant ID'] + '_PT=' + str(prompt_type) + '_' + self.expInfo['dateStr']
         self.dataFile = open(self.path+'/data/'+fileName+'.csv', 'w+')  # a simple text file with comma-separated-values
@@ -81,25 +91,27 @@ Then press Enter. Press any key when you are ready to begin.")
     def getBirdPair(self):
         # Select a pair of birds to show the participant
         # Randomly select a difference bin to choose from
-        fname = numpy.random.choice(self.pairScores)
-        with open(self.scorepath+fname, 'r') as f:
-            reader = csv.reader(f)
-            data = list(reader)
-            data = data[1:]     # Remove header row
 
-            # Randomly select a pair of birds
-            row = numpy.random.choice(data)
-            A = row[1].split('_')[0]
-            B = row[2].split('_')[0]
+        d = numpy.random.choice(self.data)
 
-            # Get the paths to the bird images
-            #[A, B] = random.sample(self.all_birds, 2)
-            path1 = self.impath + A + '.jpg'
-            path2 = self.impath + B + '.jpg'
+        # Randomly select a pair of birds
+        idx = numpy.random.choice(len(d))
+        print(len(d), idx)
+        row = d[idx].split(',')
+        A = row[0].split('_')[0]
+        B = row[1].split('_')[0]
+        print(A, B)
 
+        # Get the paths to the bird images
+        #[A, B] = random.sample(self.all_birds, 2)
+        path1 = self.impath + A + '.jpg'
+        path2 = self.impath + B + '.jpg'
+            
         # Randomize the order in which the images are shown
+        impaths = [path1, path2]
+        random.shuffle(impaths)
 
-        return path1, path2
+        return impaths
 
     def trials(self, n, writeData):
         # Show message telling the participant they are starting a warmup trial
@@ -118,7 +130,7 @@ Then press Enter. Press any key when you are ready to begin.")
 
         for i in range(n): # 200 birds is about 10 minutes
             # choose 3 random images of 3 types of birds
-            path1, path2 = self.getBirdPair()
+            [path1, path2] = self.getBirdPair()
 
             # Create the two image objects
             leftIm = visual.ImageStim(self.win, image=path1, 
@@ -140,7 +152,7 @@ Then press Enter. Press any key when you are ready to begin.")
                     
             t1 = timer.getTime()
             if writeData:
-                self.dataFile.write('%s,%s,%s,%s\n' %(A+'/'+choice1, B+'/'+choice2, self.rating.getRating(), t1-t0))
+                self.dataFile.write('%s,%s,%s,%s\n' %(path1, path2, self.rating.getRating(), t1-t0))
 
     def survey(self):
         # Ask the participant for some information
