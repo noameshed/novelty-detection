@@ -118,6 +118,59 @@ Then press Enter. Press any key when you are ready to begin.")
             if writeData:
                 self.dataFile.write('%s,%s,%s,%s\n' %(A+'/'+choice1, B+'/'+choice2, self.rating.getRating(), t1-t0))
 
+    def survey(self):
+        # Ask the participant for some information
+        title = visual.TextStim(self.win, pos=[0,12], height=1, wrapWidth=40,
+            text='Survey (press Enter when done)')
+        prompt = visual.TextStim(self.win, pos=[0,10], height=1, wrapWidth=40,
+            text='What criteria, or rules, did you use to determine similarity and difference?')
+        
+        txt = ''
+        msg = visual.TextStim(self.win, pos=[-18,0], height=1, wrapWidth=40, alignHoriz='left',
+                text=txt)
+        box = visual.Rect(self.win, pos=[0,0], width=40, height=10 )
+        #msg = visual.TextBox(self.win, pos=[0,0], font_size=12, font_color=[-1,-1,-1],
+        #    size=(10,6))
+        self.drawAll(title, prompt, msg, box)
+        self.win.flip()
+        cap = False
+        # Get user input and update textbox
+        while True:
+            keys = event.waitKeys()
+
+            if 'return' in keys or 'escape' in keys:
+                self.thankyou()
+
+            if 'space' in keys:
+                keys = ' '
+            elif 'backspace' in keys:
+                txt = txt[:-1]
+                keys = ''
+            elif 'apostrophe' in keys:
+                keys = '\''
+            elif 'comma' in keys:
+                keys = ','
+            elif 'period' in keys:
+                keys = '.'
+            elif 'backslash' in keys:
+                keys = '\\'
+            elif 'escape' in keys:
+                keys = ''
+
+            if cap:
+                keys[0] = keys[0].upper()
+                cap = False
+            if 'lshift' in keys or 'rshift' in keys:
+                cap = True
+                keys = ''
+
+            txt += txt.join(keys)
+            msg.setText(txt)
+            self.drawAll(title, prompt, msg, box)
+            self.win.flip()
+
+        return txt
+
     def thankyou(self):
         # display end-of-experiment message
         msg = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,                 # [0.5, 0.1]    0.03
@@ -134,9 +187,7 @@ Then press Enter. Press any key when you are ready to begin.")
         self.dataFile.close()
 
         # Clear the screen
-        # TODO: Set a 'thank you' message
         self.win.flip()
-        event.waitKeys()  
 
         # Close the window and end processes
         self.win.close()
@@ -153,25 +204,5 @@ if __name__ == '__main__':
     b.instructions()
     b.trials(15, False)     # Run warmup trials (not recorded)
     b.trials(200, True)     # Run experiment trials (recorded)
-    b.thankyou()
-
-    # Survey user's familiarity with birds
-    """
-    msg1 = visual.TextStim(win, pos=[.5, 0.1], height=0.03,
-        text="You will now complete a short survey to complete the experiment. Press any key when you are ready to begin.")
-
-    msg1.draw()
-    win.flip()
-    event.waitKeys()
-
-    ques1 = visual.TextStim(win, pos=[.5, 0.1], height=0.03,
-        text="How would you rate your familiarity with birds?")
-    ratingScale=visual.RatingScale(win, choices=['I know nothing about birds','I am an active birdwatcher/researcher'],
-        markerStart=0.5, singleClick=True)
-
-    ques1.draw()
-    ratingScale.draw()
-    win.flip()
-    event.waitKeys()
-    """
+    b.survey()
     
