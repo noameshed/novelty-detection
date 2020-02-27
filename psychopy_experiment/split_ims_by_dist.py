@@ -45,7 +45,6 @@ def normalize(datapath):
         df.to_csv(datapath+f)
         # Clear memory from dataframe
         del df
-        break
         
 
 def stratifyPairs(datapath, savepath, n):
@@ -70,30 +69,30 @@ def stratifyPairs(datapath, savepath, n):
         # Initialize indices array
         allScores = []
         for i in range(len(split)-1):
+            df = pd.DataFrame(columns=['image1', 'image2','normScores'])
             allScores.append([])
 
         # Go through the different split options:
         for i in range(1, len(split)):
             idx = np.argwhere((score >= split[i-1]) & (score < split[i]))
-            
+            print(i, len(idx))
             # Add pair info to the appropriate place in the list
             for j in idx:
                 triple = [im1[j].item(), im2[j].item(), score[j].item()]
                 allScores[i-1].append(triple)
 
-    # Save the arrays as CSV docs
-    print('Saving results')
-    for i in range(len(allScores)):
-        left = str(round(split[i], 2))
-        right = str(round(split[i+1], 2))
-        name =  str(i)+'_scores_'+left+'_'+right+'.csv'
-        df = pd.DataFrame(allScores[i])
-        df.to_csv(savepath+name, header=False, index=False)
+        # Save the arrays as CSV docs
+        for i in range(len(allScores)):
+            left = str(round(split[i], 2))
+            right = str(round(split[i+1], 2))
+            name =  str(i)+'_scores_'+left+'_'+right+'.csv'
+            df = pd.DataFrame(allScores[i])
+            df.to_csv(savepath+name, mode='a', header=False, index=False)
 
 
 if __name__ == "__main__":
     datapath = os.getcwd() + '/image_distances/'
     savepath = os.getcwd() + '/stratified_img_pairs/'
     normalize(datapath)
-    #stratifyPairs(datapath, savepath, 7)
+    stratifyPairs(datapath, savepath, 7)
 
