@@ -96,21 +96,18 @@ Then press Enter. Press any key when you are ready to begin.")
 
         # Randomly select a pair of birds
         idx = numpy.random.choice(len(d))
-        print(len(d), idx)
         row = d[idx].split(',')
         A = row[0].split('_')[0]
         B = row[1].split('_')[0]
-        print(A, B)
 
         # Get the paths to the bird images
         #[A, B] = random.sample(self.all_birds, 2)
-        path1 = self.impath + A + '.jpg'
-        path2 = self.impath + B + '.jpg'
+        path1 = A + '.jpg'
+        path2 = B + '.jpg'
             
         # Randomize the order in which the images are shown
         impaths = [path1, path2]
         random.shuffle(impaths)
-
         return impaths
 
     def trials(self, n, writeData):
@@ -128,19 +125,19 @@ Then press Enter. Press any key when you are ready to begin.")
         # Initialize the response timer 
         timer = core.Clock()
 
-        for i in range(n): # 200 birds is about 10 minutes
-            # choose 3 random images of 3 types of birds
+        for i in range(n): # 100 birds is about 10 minutes
+            # choose an image pair from the precomputed list of image pairs
             [path1, path2] = self.getBirdPair()
 
             # Create the two image objects
-            leftIm = visual.ImageStim(self.win, image=path1, 
+            leftIm = visual.ImageStim(self.win, image=self.impath + path1, 
                 flipHoriz=True, pos=(-10,3), units='deg', size=(10,10))
-            rightIm = visual.ImageStim(self.win, image=path2, 
+            rightIm = visual.ImageStim(self.win, image=self.impath + path2, 
                 flipHoriz=True, pos=(10,3), units='deg', size=(10,10))
 
             self.rating.reset()
             t0 = timer.getTime()
-            # Wait for participant response
+            # Display images and wait for participant response
             while self.rating.noResponse:
                 self.drawAll(leftIm, rightIm, self.scaleMsg, self.rating, 
                     self.labels, self.diff_label, self.sim_label)
@@ -162,7 +159,7 @@ Then press Enter. Press any key when you are ready to begin.")
             text='What criteria, or rules, did you use to determine similarity and difference?')
         
         txt = ''
-        msg = visual.TextStim(self.win, pos=[-18,0], height=1, wrapWidth=40, alignHoriz='left',
+        msg = visual.TextStim(self.win, pos=[-19,0], height=1, wrapWidth=38, alignHoriz='left',
                 text=txt)
         box = visual.Rect(self.win, pos=[0,0], width=40, height=10 )
         #msg = visual.TextBox(self.win, pos=[0,0], font_size=12, font_color=[-1,-1,-1],
@@ -177,6 +174,7 @@ Then press Enter. Press any key when you are ready to begin.")
             if 'return' in keys or 'escape' in keys:
                 self.thankyou()
 
+            # Fix keys printing character names
             if 'space' in keys:
                 keys = ' '
             elif 'backspace' in keys:
@@ -190,8 +188,12 @@ Then press Enter. Press any key when you are ready to begin.")
                 keys = '.'
             elif 'backslash' in keys:
                 keys = '\\'
+            elif 'slash' in keys:
+                keys = '/'
             elif 'escape' in keys:
                 keys = ''
+
+            #TODO: What other keys did I miss?
 
             if cap:
                 keys[0] = keys[0].upper()
@@ -207,6 +209,8 @@ Then press Enter. Press any key when you are ready to begin.")
 
         # Save response into text file:
         self.surveyFile.write(txt)
+
+        #TODO: Why  doesn't this save the file properly?
 
     def thankyou(self):
         # display end-of-experiment message
@@ -233,13 +237,13 @@ Then press Enter. Press any key when you are ready to begin.")
 
 if __name__ == '__main__': 
 
-    # Randomly select the participant's prompt type
+    # Randomly select the participant's prompt type ('bird' or 'image')
     prompt_type=0
     if numpy.random.rand() < 0.5:
         prompt_type=1
 
     b = BirdSimExp(prompt_type)
     b.instructions()
-    b.trials(15, False)     # Run warmup trials (not recorded)
-    b.trials(200, True)     # Run experiment trials (recorded)
-    b.survey()
+    b.trials(15, True)     # Run warmup trials (recorded)
+    b.trials(300, True)     # Run experiment trials (recorded)
+    b.thankyou()
