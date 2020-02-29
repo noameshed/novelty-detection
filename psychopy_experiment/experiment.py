@@ -33,11 +33,10 @@ class BirdSimExp():
                 for line in fopen:
                     self.data[i].append(line)
             
-        # Make a new csv and txt files to save data
+        # Make a new csv file to save data
         fileName = self.expInfo['Participant ID'] + '_PT=' + str(prompt_type) + '_' + self.expInfo['dateStr']
         self.dataFile = open(self.path+'/data/'+fileName+'.csv', 'w+')  # a simple text file with comma-separated-values
-        self.dataFile.write('leftIm,rightIm,userChoice,responseTime\n')
-        self.surveyFile = open(self.path+'/data/'+fileName+'.txt', 'w+')
+        self.dataFile.write('leftIm,rightIm,userChoice,cnnRating,responseTime\n')
 
         # Create a window using the monitor's dimensions
         user32 = ctypes.windll.user32
@@ -85,15 +84,17 @@ Then press Enter. Press any key when you are ready to begin.")
 
     def getBirdPair(self):
         # Select a pair of birds to show the participant
-        
+
         # Randomly select a difference bin to choose from
-        d = numpy.random.choice(self.data)
+        idx = numpy.random.choice(range(len(self.data)))
+        d = self.data[idx]
 
         # Randomly select a pair of birds
         idx = numpy.random.choice(len(d))
         row = d[idx].split(',')
         A = row[0].split('_')[0]
         B = row[1].split('_')[0]
+        rating = row[2].strip()
 
         # Get the paths to the bird images
         #[A, B] = random.sample(self.all_birds, 2)
@@ -103,13 +104,13 @@ Then press Enter. Press any key when you are ready to begin.")
         # Randomize the order in which the images are shown
         impaths = [path1, path2]
         random.shuffle(impaths)
-        return impaths
+        return impaths[0], impaths[1], rating
 
-    def trials(self, n, writeData):
+    def trials(self, n, writeData, practice):
         # Show message telling the participant they are starting a warmup trial
         msg = visual.TextStim(self.win, pos=[0,0], height=1, wrapWidth=40,
                 text="You will now begin a practice round. You will see pairs of images and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
-        if writeData:   # Show messages telling the participant they are about to begin the real experiment
+        if not practice:   # Show messages telling the participant they are about to begin the real experiment
             msg = visual.TextStim(self.win, pos=[0,0], height=1, wrapWidth=40,    
                 text="You will now begin the experiment. You will see pairs of images and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
             
@@ -122,7 +123,7 @@ Then press Enter. Press any key when you are ready to begin.")
 
         for i in range(n): # 100 birds is about 10 minutes
             # choose an image pair from the precomputed list of image pairs
-            [path1, path2] = self.getBirdPair()
+            [path1, path2, cnn_rating] = self.getBirdPair()
 
             # Create the two image objects
             leftIm = visual.ImageStim(self.win, image=self.impath + path1, 
@@ -144,68 +145,7 @@ Then press Enter. Press any key when you are ready to begin.")
                     
             t1 = timer.getTime()
             if writeData:
-                self.dataFile.write('%s,%s,%s,%s\n' %(path1, path2, self.rating.getRating(), t1-t0))
-
-    def survey(self):
-        # Ask the participant for some information
-        title = visual.TextStim(self.win, pos=[0,12], height=1, wrapWidth=40,
-            text='Survey (press Enter when done)')
-        prompt = visual.TextStim(self.win, pos=[0,10], height=1, wrapWidth=40,
-            text='What criteria, or rules, did you use to determine similarity and difference?')
-        
-        txt = ''
-        msg = visual.TextStim(self.win, pos=[-19,0], height=1, wrapWidth=38, alignHoriz='left',
-                text=txt)
-        box = visual.Rect(self.win, pos=[0,0], width=40, height=10 )
-        #msg = visual.TextBox(self.win, pos=[0,0], font_size=12, font_color=[-1,-1,-1],
-        #    size=(10,6))
-        self.drawAll(title, prompt, msg, box)
-        self.win.flip()
-        cap = False
-        # Get user input and update textbox
-        while True:
-            keys = event.waitKeys()
-
-            if 'return' in keys or 'escape' in keys:
-                self.thankyou()
-
-            # Fix keys printing character names
-            if 'space' in keys:
-                keys = ' '
-            elif 'backspace' in keys:
-                txt = txt[:-1]
-                keys = ''
-            elif 'apostrophe' in keys:
-                keys = '\''
-            elif 'comma' in keys:
-                keys = ','
-            elif 'period' in keys:
-                keys = '.'
-            elif 'backslash' in keys:
-                keys = '\\'
-            elif 'slash' in keys:
-                keys = '/'
-            elif 'escape' in keys:
-                keys = ''
-
-            #TODO: What other keys did I miss?
-
-            if cap:
-                keys[0] = keys[0].upper()
-                cap = False
-            if 'lshift' in keys or 'rshift' in keys:
-                cap = True
-                keys = ''
-
-            txt += txt.join(keys)
-            msg.setText(txt)
-            self.drawAll(title, prompt, msg, box)
-            self.win.flip()
-
-        # Save response into text file:
-        self.surveyFile.write(txt)
-
-        #TODO: Why  doesn't this save the file properly?
+                self.dataFile.write('%s,%s,%s,%s,%s\n' %(path1, path2, self.rating.getRating(), str(cnn_rating), t1-t0))
 
     def thankyou(self):
         # display end-of-experiment message
@@ -239,6 +179,6 @@ if __name__ == '__main__':
 
     b = BirdSimExp(prompt_type)
     b.instructions()
-    b.trials(15, True)     # Run warmup trials (recorded)
-    b.trials(300, True)     # Run experiment trials (recorded)
+    b.trials(15, True, True)     # Run warmup trials (recorded)
+    b.trials(300, True, False)     # Run experiment trials (recorded)
     b.thankyou()
