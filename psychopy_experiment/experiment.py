@@ -60,17 +60,12 @@ class BirdSimExp():
             arg.draw()
 
     def getSessionInfo(self):
-        try:  # try to get a previous parameters file
-            expInfo = fromFile(os.getcwd() + '/lastParams.pickle')
-        except:  # if not there then use a default set
-            expInfo = {'Participant ID':'', 'Experimenter ID':''}
+        expInfo = {'Participant ID':'', 'Experimenter ID':''}
         expInfo['dateStr'] = data.getDateStr()  # add the current time
 
         # present a dialogue to change params
         dlg = gui.DlgFromDict(expInfo, title='Image Similarity', fixed=['dateStr'])
-        if dlg.OK:
-            toFile(os.getcwd() + 'lastParams.pickle', expInfo)  # save params to file for next time
-        else:
+        if not dlg.OK:
             core.quit()  # the user hit cancel so exit
 
         return expInfo
@@ -90,8 +85,8 @@ Then press Enter. Press any key when you are ready to begin.")
 
     def getBirdPair(self):
         # Select a pair of birds to show the participant
+        
         # Randomly select a difference bin to choose from
-
         d = numpy.random.choice(self.data)
 
         # Randomly select a pair of birds

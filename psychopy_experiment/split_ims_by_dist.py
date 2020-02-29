@@ -46,7 +46,6 @@ def normalize(datapath):
         # Clear memory from dataframe
         del df
         
-
 def stratifyPairs(datapath, savepath, n):
     """
     Create n lists of image pairs with increasing distance scores
@@ -89,10 +88,35 @@ def stratifyPairs(datapath, savepath, n):
             df = pd.DataFrame(allScores[i])
             df.to_csv(savepath+name, mode='a', header=False, index=False)
 
+def selectSubset(path, pairs):
+    # Randomly select a subset of image pairs from each of the stratified bins
+    binfiles = os.listdir(path)[::-1]
+    for f in tqdm(binfiles):
+
+        # Open file and store contents
+        df = pd.read_csv(path+f)
+
+        print(df.head)
+        # Randomly select pairs number of image pairs
+        idx = np.random.choice(len(df), pairs)
+        df = df.iloc[idx,:]
+
+        # Save the selected data with a new name
+        savename = 'subset_'+f
+        df.to_csv(path + savename, header=False, index=False)
+        del df
 
 if __name__ == "__main__":
     datapath = os.getcwd() + '/image_distances/'
     savepath = os.getcwd() + '/stratified_img_pairs/'
-    normalize(datapath)
-    stratifyPairs(datapath, savepath, 7)
+    #normalize(datapath)        # Set scores to be between 0 and 1
+    #stratifyPairs(datapath, savepath, 7)       # Split scores by CNN score into 7 bins
+
+    # There are too many image pairs and the data files are too large
+    # Precompute the image pairs that we want users to see
+    pairs = 150   # How many image pairs are chosen from each set
+    # 100 images -> 18% overlap between participants
+    # 150 images -> 8% overlap between participants
+    # 200 images -> 4.6% overlap between participants
+    selectSubset(savepath, pairs)
 
