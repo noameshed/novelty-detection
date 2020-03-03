@@ -34,7 +34,7 @@ class BirdSimExp():
                     self.data[i].append(line)
             
         # Make a new csv file to save data
-        fileName = self.expInfo['Participant ID'] + '_PT=' + str(prompt_type) + '_' + self.expInfo['dateStr']
+        fileName = self.expInfo['Participant ID'] + '_PT=' + self.prompt + '_' + self.expInfo['dateStr']
         self.dataFile = open(self.path+'/data/'+fileName+'.csv', 'w+')  # a simple text file with comma-separated-values
         self.dataFile.write('leftIm,rightIm,userChoice,cnnRating,responseTime\n')
 
@@ -71,16 +71,26 @@ class BirdSimExp():
 
     def instructions(self):
         # display instructions and wait
-        msg = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,                 # [0.5, 0.1]    0.03
+        msg1 = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,                 # [0.5, 0.1]    0.03
             text=
-            "In this experiment, you will be shown pairs of "+self.prompt+".\n\n\
+            "In this experiment, you will be shown pairs of bird photos.\n\n\
+You will either be asked to rate the similarity of the images themselves, or to rate the similarity of the birds in the images.\n\n\
+Press any key when you are ready to begin.")
+
+        msg2 = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,                 # [0.5, 0.1]    0.03
+            text=
+            "Please rate the similarity between the pairs of" + self.prompt + ".\n\n\
 Choose a value (1-7) on the scale to describe how similar they are.\n\n\
 1 is least similar and 7 is most similar. Use the 1-7 keyboard keys to select the value.\n\n\
 Then press Enter. Press any key when you are ready to begin.")
-        msg.draw()
 
+        msg1.draw()
         self.win.flip()     # to show the messages
         event.waitKeys()    # pause until there's a keypress
+
+        msg2.draw()
+        self.win.flip()
+        event.waitKeys()
 
     def getBirdPair(self):
         # Select a pair of birds to show the participant
@@ -109,10 +119,10 @@ Then press Enter. Press any key when you are ready to begin.")
     def trials(self, n, writeData, practice):
         # Show message telling the participant they are starting a warmup trial
         msg = visual.TextStim(self.win, pos=[0,0], height=1, wrapWidth=40,
-                text="You will now begin a practice round. You will see pairs of images and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
+                text="You will now begin a practice round. You will see pairs of " + self.prompt + " and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
         if not practice:   # Show messages telling the participant they are about to begin the real experiment
             msg = visual.TextStim(self.win, pos=[0,0], height=1, wrapWidth=40,    
-                text="You will now begin the experiment. You will see pairs of images and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
+                text="You will now begin the experiment. You will see pairs of " + self.prompt + " and choose a value (1-7) to decide how similar they are.\n\nPress any key when you are ready to begin.")
             
         msg.draw()
         self.win.flip()
