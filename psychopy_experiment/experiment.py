@@ -45,14 +45,14 @@ class BirdSimExp():
                 monitor='testMonitor', units='cm', fullscr=True)
 
         # Define the rating scale parameters
-        self.scaleMsg = visual.TextStim(self.win, pos=[0,10], height=1, wrapWidth=40,           #[0.5, 0.3]
+        self.scaleMsg = visual.TextStim(self.win, pos=[0,10], height=1, wrapWidth=40,           
                 text="Rate how similar the two " + self.prompt + " below are on a scale from 1-7. Then press Enter.")
-        self.rating = visual.RatingScale(self.win,pos=[0,-.3], low=1, high=7, respKeys=['1','2','3','4','5','6','7'],      #[0, -.4]
+        self.rating = visual.RatingScale(self.win,pos=[0,-0.7], low=1, high=7, respKeys=['1','2','3','4','5','6','7'],
                 acceptKeys=['return', 'space'], showAccept=False, textColor=[0.2,0.2,0.2] )
-        self.labels = visual.TextStim(self.win, pos=[0,-6], height=.8, wrapWidth=40,            # [0.72,-.22], 0.02
+        self.labels = visual.TextStim(self.win, pos=[0,-10], height=.8, wrapWidth=40,
                 text="1           2          3          4          5          6          7")
-        self.diff_label = visual.TextStim(self.win, pos=[-14,-6], height=.8, text='very different')        # [0.5, -.22]
-        self.sim_label = visual.TextStim(self.win, pos=[14,-6], height=.8, text='very similar')         #[1.35, -.22]
+        self.diff_label = visual.TextStim(self.win, pos=[-14,-10], height=.8, text='very different')
+        self.sim_label = visual.TextStim(self.win, pos=[14,-10], height=.8, text='very similar')
 
     def drawAll(self, *argv):
         for arg in argv:
@@ -71,13 +71,13 @@ class BirdSimExp():
 
     def instructions(self):
         # display instructions and wait
-        msg1 = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,                 # [0.5, 0.1]    0.03
+        msg1 = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,             
             text=
             "In this experiment, you will be shown pairs of bird photos.\n\n\
 You will either be asked to rate the similarity of the images themselves, or to rate the similarity of the birds in the images.\n\n\
 Press any key when you are ready to begin.")
 
-        msg2 = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,                 # [0.5, 0.1]    0.03
+        msg2 = visual.TextStim(self.win, pos=[0, 0], height=1, wrapWidth=40,                 
             text=
             "Please rate the similarity between the pairs of" + self.prompt + ".\n\n\
 Choose a value (1-7) on the scale to describe how similar they are.\n\n\
@@ -137,9 +137,9 @@ Then press Enter. Press any key when you are ready to begin.")
 
             # Create the two image objects
             leftIm = visual.ImageStim(self.win, image=self.impath + path1, 
-                flipHoriz=True, pos=(-10,3), units='deg', size=(10,10))
+                flipHoriz=True, pos=(-10,0), units='deg', size=(15, 15))
             rightIm = visual.ImageStim(self.win, image=self.impath + path2, 
-                flipHoriz=True, pos=(10,3), units='deg', size=(10,10))
+                flipHoriz=True, pos=(10,0), units='deg', size=(15, 15))
 
             self.rating.reset()
             t0 = timer.getTime()
