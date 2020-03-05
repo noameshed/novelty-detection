@@ -2,6 +2,7 @@ import numpy as np
 import os
 import pandas as pd
 from tqdm import tqdm
+import shutil
 
 def getMinAndMax(datapath):
     # Get the min and max distance scores from *all* of the pairs of image distances
@@ -106,9 +107,46 @@ def selectSubset(path, pairs):
         df.to_csv(path + savename, header=False, index=False)
         del df
 
+def saveUsedImages(namepath, imgpath, savepath):
+    # Takes all of the images stored in the path files and copies them into a new directory
+    binfiles = os.listdir(namepath)[::-1]
+    for f in tqdm(binfiles):
+
+        # Open file and store contents
+        df = pd.read_csv(namepath+f)
+
+        for index, row in df.iterrows():
+            # Get the paths for the two birds in the pair
+            path1 = row[0]
+            path2 = row[1]
+
+            # Extract the species name and image name
+            species1 = path1.split('/')[0].strip()
+            species2 = path2.split('/')[0].strip()
+            bird1 = path1.split('/')[1].split('_')[0].strip() + '.jpg'
+            bird2 = path2.split('/')[1].split('_')[0].strip() + '.jpg'
+
+            # Try to create a new image folder for each species
+            if not os.path.exists(savepath+species1):
+                os.makedirs(savepath+species1)
+            if not os.path.exists(savepath+species2):
+                os.makedirs(savepath+species2)
+
+            # Copy the images into their new folders if not there already
+            savefile1 = savepath + species1 + '/' + bird1
+            savefile2 = savepath + species2 + '/' + bird2
+            if not os.path.exists(savefile1):
+                shutil.copy(imgpath + species1 + '/' + bird1, savefile1)
+            if not os.path.exists(savefile2):
+                shutil.copy(imgpath + species2 + '/' + bird2, savefile2)
+
+
 if __name__ == "__main__":
     datapath = os.getcwd() + '/image_distances/'
-    savepath = os.getcwd() + '/stratified_img_pairs/'
+    pairscorespath = os.getcwd() + '/stratified_img_pairs/'
+    imgpath = os.getcwd() + '/images/Aves/'
+    imgsubsetpath = os.getcwd() + '/images/Aves_sub/'
+
     #normalize(datapath)        # Set scores to be between 0 and 1
     #stratifyPairs(datapath, savepath, 7)       # Split scores by CNN score into 7 bins
 
@@ -118,5 +156,8 @@ if __name__ == "__main__":
     # 100 images -> 18% overlap between participants
     # 150 images -> 8% overlap between participants
     # 200 images -> 4.6% overlap between participants
-    selectSubset(savepath, pairs)
+    #selectSubset(savepath, pairs)
+
+    # Copy the randomly chosen images to a new folder
+    saveUsedImages(pairscorespath, imgpath, imgsubsetpath)
 
