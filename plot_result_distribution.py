@@ -75,7 +75,7 @@ def plot_all_labels(data, title=None, save=None, showplot=False):
 
 if __name__ == "__main__":
 	path = os.getcwd() + '/alexnet_birdvid_results/'
-	savepath = 'C:/Users/noam_/Documents/Cornell/CS7999/1_27_20/inaturalist_label_distributions/'
+	savepath = 'C:/Users/noam_/Documents/Cornell/CS7999/3_3_2020/inaturalist_label_distributions/'
 
 	# To plot the video results
 	# for species in os.listdir(path):
