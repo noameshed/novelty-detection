@@ -194,7 +194,7 @@ if __name__ == '__main__':
 	df = pd.read_csv('in_out_class.csv')
 
 	species = 'Aves'
-	save_path = 'C:/Users/noam_/Documents/Cornell/CS7999/11_25_19/alexnet_80_class_imagenet/'	# Set to None to prevent saving
+	save_path = None #'C:/Users/noam_/Documents/Cornell/CS7999/11_25_19/resnet18_80_class_imagenet/'	# Set to None to prevent saving
 
 	labeled_data = df[df['Biological Group']==species]
 	labeled_data = labeled_data[labeled_data['Annotator'].notnull()]
@@ -225,7 +225,7 @@ if __name__ == '__main__':
 		row = df.iloc[i]
 		grp = row['Biological Group']
 		name = row['Class']
-		filename = os.getcwd() + '/alexnet_inat_results/' + grp + '/' + name + '.json'
+		filename = os.getcwd() + '/alexnet_inat_results_bbox/' + grp + '/' + name + '.json'
 		with open(filename, 'r') as f:
 			f = json.load(f)
 			for im in tqdm(f.keys()):		# Loop through the images in the file
@@ -254,7 +254,7 @@ if __name__ == '__main__':
 	# print(X.shape, Y_imagenet_relation.shape, np.array(X_classes).shape)
 
 	# Combine vectors (length 1000) into superclasses vectors (length 80)
-	X = combine_to_superclasses(X, X_classes, l_sorted)
+	# X = combine_to_superclasses(X, X_classes, l_sorted)
 
 	# Split data
 	X_train, X_test, Y_train, Y_test, train_imgs, test_imgs = split_data(X, Y_imagenet_relation, Y_table_index)
@@ -275,24 +275,24 @@ if __name__ == '__main__':
 				f.write(line)
 	
 
-	# Train Random Forest Classifier
-	clf_rf = RandomForestClassifier(n_estimators=100, class_weight='balanced')
-	clf_rf.fit(X_train, Y_train)
-	preds_rf = clf_rf.predict(X_test)
-	print('Random Forest:', clf_rf.score(X_test, Y_test))
+	# # Train Random Forest Classifier
+	# clf_rf = RandomForestClassifier(n_estimators=100,class_weight='balanced')
+	# clf_rf.fit(X_train, Y_train)
+	# preds_rf = clf_rf.predict(X_test)
+	# print('Random Forest:', clf_rf.score(X_test, Y_test))
 	
-	# Save RF results:
-	if save_path is not None:
-		with open(save_path+species+'_rf_results_balanced.txt', 'w') as f:
-			f.write('ImageID\t Actual\t Prediction\n')
-			for i, p in enumerate(preds_rf):
-				line = test_imgs[i]+'\t'+Y_test[i]+'\t'+p+'\n'
-				f.write(line)
+	# # Save RF results:
+	# if save_path is not None:
+	# 	with open(save_path+species+'_rf_results_.txt', 'w') as f:
+	# 		f.write('ImageID\t Actual\t Prediction\n')
+	# 		for i, p in enumerate(preds_rf):
+	# 			line = test_imgs[i]+'\t'+Y_test[i]+'\t'+p+'\n'
+	# 			f.write(line)
 
 	# Plot confusion matrices
 	classes = ['relative in imagenet', 'in imagenet', 'parent in imagenet', 'not in imagenet']
 	title = 'CM for SVM, features=top conf. value per image'
 	plot_confusion_matrix(Y_test, preds_svc, classes, normalize=True, title=title)
-	title = 'CM for RF, features=top conf. value per image'
-	plot_confusion_matrix(Y_test, preds_rf, classes, normalize=True, title=title)
+	# title = 'CM for RF, features=top conf. value per image'
+	# plot_confusion_matrix(Y_test, preds_rf, classes, normalize=True, title=title)
 	

@@ -2,7 +2,8 @@ import csv
 import json
 import numpy as np
 import os
-import seaborn as sb
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def get_categories(filename):
 	# Open the file with list of categories and the imagenet classes
@@ -38,62 +39,91 @@ def get_categories(filename):
 
 	return cat_to_lab, lab_to_cat
 			
+def plotfig(ys, labels, title, savepath):
+	# Plot the most common labels by class
+	plt.figure()
+	ax = sns.scatterplot(range(len(ys)), ys)
+	plt.title(title)
+	plt.xlabel('Label Categories')
+	plt.ylabel('Label frequency')
+	plt.xticks(range(len(ys)))
+	ax.set_xticklabels(labels, rotation='vertical', fontsize=8)
+	plt.tight_layout()
 
+	#plt.show()
+	# Save resulting plot
+	fig = ax.get_figure()
+	fig.savefig(savepath)
+	plt.close()
 
 if __name__ == "__main__":
 	
 	# Create the category-label dictionaries
 	cat_to_lab, lab_to_cat = get_categories(os.getcwd() + '/imagenet_categories.csv')
-	
+	savepath = os.getcwd() + '/plots_category_dist/'
+
 	# Looking at the category distribution of CNN labels for a test class
 	with open(os.getcwd() + '/alexnet_inat_results/inat_results_top_choice.json') as f:
 		cnn_results = json.load(f)
 		organism_groups = cnn_results.keys()		# Amphibia, Fungi, Mammalia, etc.
-		curclass = 'Arachnida'
+		for curclass in organism_groups:
+			# Create save folder for the organism
+			try:
+				os.mkdir(savepath + curclass)
+			except:
+				pass
 
-		# TODO: for group in organism_groups
-		# Get data on each test class
-		test_classes = cnn_results[curclass].keys()
-		for c in test_classes:
-			# Get all of the cnn labels for that creature
-			cnn_labels = cnn_results[curclass][c]['labels']
-			cnn_counts = cnn_results[curclass][c]['counts']
-			print(cnn_results[curclass][c])		# Keys are 'labels', 'confs', 'counts'
+			all_cats = list(cat_to_lab.keys())
+			total_count = np.zeros(len(all_cats))
 
-			# Get categories for the labels of each image in the class
-			result_cats = []		# A non-unique list of the categories, e.g. [hat, but, hat, clothing]
-			for r in cnn_labels:
-				result_cats.append(lab_to_cat[r])
+			# Get data on each test class
+			test_classes = cnn_results[curclass].keys()
+			for c in test_classes:
+				# Get all of the cnn labels for that creature
+				cnn_labels = cnn_results[curclass][c]['labels']
+				cnn_counts = cnn_results[curclass][c]['counts']
 
-			# Make a new distribution of categories rather than labels, based on the counts
-			result_cats_unique = []		# A unique list of the categories, e.g. [hat, bug, clothing]
-			result_cats_count = []		# The number of occurrences of each unique category
-			print(cnn_labels)
-			print(result_cats)
-			for i,r in enumerate(result_cats):
-				# Add to unique list of categories
-				if r not in result_cats_unique:
-					result_cats_unique.append(r)
-					result_cats_count.append(0)
+				# Get categories for the labels of each image in the class
+				result_cats = []		# A non-unique list of the categories, e.g. [hat, but, hat, clothing]
+				if cnn_labels is None:
+					continue
+				for r in cnn_labels:
+					result_cats.append(lab_to_cat[r])
 
-				# Count how many times it appears over all images
-				idx = result_cats_unique.index(r)
-				count = cnn_counts[i]		# How many times has the category appeared because of this label
-				result_cats_count[idx] += count
+				# Make a new distribution of categories rather than labels, based on the counts
+				result_cats_unique = []		# A unique list of the categories, e.g. [hat, bug, clothing]
+				result_cats_count = []		# The number of occurrences of each unique category
 
-			
-			# Sort in ascending order of frequency
-			order = np.argsort(result_cats_count)
-			result_cats_unique = np.array(result_cats_unique)[order]
-			result_cats_count = np.array(result_cats_count)[order]
+				for i,r in enumerate(result_cats):					
+					# Add to unique list of categories
+					if r not in result_cats_unique:
+						result_cats_unique.append(r)
+						result_cats_count.append(0)
 
-			# Plot the most common labels by class
+					# Count how many times it appears over all images
+					idx = result_cats_unique.index(r)
+					count = cnn_counts[i]		# How many times has the category appeared because of this label
+					result_cats_count[idx] += count
 
+					# Add that count to the total count for this organism group (i.e. Aves)
+					idx = all_cats.index(r)
+					total_count[idx] += count
+				
+				# Sort in ascending order of frequency
+				order = np.argsort(result_cats_count)
+				result_cats_unique = np.array(result_cats_unique)[order]
+				result_cats_count = np.array(result_cats_count)[order]
+				result_cats_freq = result_cats_count/sum(result_cats_count)
 
-			break
+				title = 'Test Class: '+c
+				plotfig(result_cats_freq, result_cats_unique, title, savepath+curclass+'/'+c+'.png')
 
-			
-
-		# Plot the most common labels by animal group
+			# Plot the most common labels by animal group
+			total_freq = total_count/sum(total_count)
+			order = np.argsort(total_freq)
+			total_freq_sorted = np.array(total_freq)[order]
+			all_cats_sorted = np.array(all_cats)[order]
+			title = 'Average categories: '+curclass
+			plotfig(total_freq_sorted, all_cats_sorted, title, savepath+curclass+'.png')
 
 
