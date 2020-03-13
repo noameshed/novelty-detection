@@ -26,7 +26,7 @@ This plot shows the frequency of the top 20 labels over all bird species in iNat
 ![Bird Label Frequencies](https://github.com/noameshed/novelty-detection/blob/master/top_20_aves.png)
 
 ### plot_result_distribution.py
-This script plots the distribution of CNN labels over each species. It does so by counting the number of occurrences of each label over many images of that species and normalizing the result to get a frequency distribution rather than an occurrence count distribution. This can help us understand what common mistakes the network makes when classifying images of a given species.
+This script plots the distribution of CNN labels over each species. It does so by counting the number of occurrences of each label over many images of that species and normalizing the result to get a frequency distribution rather than an occurrence count distribution. There is an option to color and label each point according to the average confidence of the label. This can help us understand what common mistakes the network makes when classifying images of a given species.
 
 In this example plot, we can see the distribution of all labels guessed by the network in the set of African Penguin images. It shows that approximately 19% of the images are classified as magpie, 19% as goose, etc. Interestingly, the king_penguin label is only awarded to 5% of the images and is tied for the 5th most common label.
 
