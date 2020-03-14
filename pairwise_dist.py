@@ -24,9 +24,10 @@ def kl(im1, im2):
     return np.sum(np.where(im1 != 0, im1*np.log(im1/im2), 0))
 
 if __name__ == "__main__":
-    
-    path = 'D:/noam_/Cornell/CS7999/iNaturalist/gradients/Aves_layer3/'
-    savepath='D:/noam_/Cornell/CS7999/iNaturalist/layer3_dists/'
+    layer = '8'
+    path = 'D:/noam_/Cornell/CS7999/iNaturalist/gradients/Aves_layer'+layer+'/'
+    savepath='D:/noam_/Cornell/CS7999/iNaturalist/layer'+layer+'_dists_alexnet/'
+
     # Get a list of paths to every single bird image
     allbirds = []
     for s in os.listdir(path):
@@ -38,35 +39,49 @@ if __name__ == "__main__":
     print('birds in allbirds:', len(allbirds))
 
     # Create pandas dataframe to save data
-    data = [['image1', 'image2', 'scoretype', 'score', 'scoretype', 'score']]
-
+    data = [['image1', 'image2', 'euclid', 'kl']]
+    count = 0
     last_species=allbirds[0].split('/')[-2]
-    counter=1
+
     for i in tqdm(range(len(allbirds)-1)):
-        bird1 = allbirds[i].split('Aves_layer3/')[1]
+        bird1 = allbirds[i].split('Aves_layer'+layer+'/')[1]
         cur_species = bird1.split('/')[0]
         im1 = process_im(allbirds[i])
-        
+
         # Save file whenever we switch to a new species for i (bird1)
-        if last_species != cur_species:
+        if last_species != cur_species: 
             
             last_species = cur_species
-            name = 'pairwise_dists'+str(counter)+'.csv'
-            counter+=1
+            print(last_species)
+
+            name = last_species+str(count)+'.csv'
+            count = 0
             with open(savepath+name, 'w') as f:
                 wr = csv.writer(f, lineterminator='\n')
                 wr.writerows(data)
                 del data
-                data =  [['image1', 'image2', 'scoretype', 'score', 'scoretype', 'score']]
-
+                data =  [['image1', 'image2', 'euclid', 'kl']]
+            
+        elif len(data) > 1000000:          # if the file is getting big, split it up
+            name = last_species+str(count)+'.csv'
+            count += 1
+            with open(savepath+name, 'w') as f:
+                wr = csv.writer(f, lineterminator='\n')
+                wr.writerows(data)
+                del data
+                data =  [['image1', 'image2', 'euclid', 'kl']]
+            
         # Compare the current bird to every other bird in our database
         #for j in range(0,i):
         for j in range(i+1, len(allbirds)):
             im2 = process_im(allbirds[j])
             disteuc = euclid_dist(im1, im2)
             distkl = kl(im1, im2)
+            del im2
 
-            bird2 = allbirds[j].split('Aves_layer3/')[1]
-            row = [bird1, bird2, 'euclid', disteuc, 'kl', distkl]
+            bird2 = allbirds[j].split('Aves_layer'+layer+'/')[1]
+            row = [bird1, bird2, disteuc, distkl]
             data.append(row)
+        
+        del im1
         
