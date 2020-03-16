@@ -54,7 +54,7 @@ if __name__ == "__main__":
             last_species = cur_species
             print(last_species)
 
-            name = last_species+str(count)+'.csv'
+            name = cur_species+str(count)+'.csv'
             count = 0
             with open(savepath+name, 'w') as f:
                 wr = csv.writer(f, lineterminator='\n')
@@ -63,7 +63,7 @@ if __name__ == "__main__":
                 data =  [['image1', 'image2', 'euclid', 'kl']]
             
         elif len(data) > 1000000:          # if the file is getting big, split it up
-            name = last_species+str(count)+'.csv'
+            name = cur_species+str(count)+'.csv'
             count += 1
             with open(savepath+name, 'w') as f:
                 wr = csv.writer(f, lineterminator='\n')
