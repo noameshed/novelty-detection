@@ -30,7 +30,7 @@ This script plots the distribution of CNN labels over each species. It does so b
 
 In this example plot, we can see the distribution of all labels guessed by the network in the set of African Penguin images. It shows that approximately 19% of the images are classified as magpie, 19% as goose, etc. Interestingly, the king_penguin label is only awarded to 5% of the images and is tied for the 5th most common label.
 
-![African Penguin Distribution](https://github.com/noameshed/novelty-detection/blob/master/Spheniscus_demersus.jpg)
+![African Penguin Distribution](https://github.com/noameshed/novelty-detection/blob/master/Spheniscus demersus.jpg)
 
 ### alexnet_novelty.py
 This script tests AlexNet (pretrained on ImageNet) on all of the data from iNaturalist and saves the result into the ```alexnet_inat_results/``` folder.
