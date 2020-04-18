@@ -7,6 +7,12 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from transfer_model import Transfer
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision
+from torchvision import models, transforms, datasets
 
 def setup_bbox():
 	# Taken from https://github.com/daviswer/fewshotlocal/blob/master/Setup.ipynb
@@ -44,7 +50,7 @@ def setup_bbox():
 			catdict[cat].add(im)
 		else:
 			catdict[cat] = set([im])
-    
+	
 	print("Built annotation dictionaries")
 	return annodict, boxdict, catdict, imgdict
 
@@ -162,7 +168,7 @@ def get_most_common_labels(table, n):
 
 	return unique_labels[to_sort][-n:], label_conf[to_sort][-n:], label_counts[to_sort][-n:]
 
-def test_inat(root_path, savefile, model, imagenet_labels, bbox = False):
+def test_inat(root_path, savefile, model, imagenet_labels, n=0, bbox=False):
 	# Set up bounding box annotations for iNaturalist images
 	if bbox:
 		annodict, boxdict, catdict, imgdict = setup_bbox()	
@@ -172,8 +178,11 @@ def test_inat(root_path, savefile, model, imagenet_labels, bbox = False):
 	# Loop through each biological group
 	for typename in os.listdir(root_path):
 		# Create directories if they don't already exist
+		if typename != 'Aves':	# Only look at Aves (saves time)
+			continue
+
 		try:
-			os.mkdir(os.getcwd() + '/alexnet_birdvid_results/' + typename + '/')
+			os.mkdir(save_path + typename + '/')
 		except:
 			continue
 
@@ -185,7 +194,7 @@ def test_inat(root_path, savefile, model, imagenet_labels, bbox = False):
 			# try:
 			table, dic = test_images(path, imagenet_labels, model, annodict, boxdict, catdict, imgdict)
 
-			labels, confs, counts = get_most_common_labels(table, 0)	# get all results
+			labels, confs, counts = get_most_common_labels(table, n)	# to get all results use n=0
 			
 			to_sort = np.argsort(counts)
 			# Dictionary version, all results for each picture
@@ -255,7 +264,7 @@ def plot_all_labels(table, title=None, save=None, showplot=True):
 		plt.show()
 
 	if save is not None:
-    		plt.savefig(save)
+			plt.savefig(save)
 
 	plt.close()
 	return plt
@@ -378,29 +387,35 @@ def plot_split_label_conf(table, title=None, showplot=False):
 if __name__ == '__main__':
 	# print(dir(models))
 	image_path = 'D:/noam_/Cornell/CS7999/iNaturalist/train_val_images/'
-	# image_path = 'D:/noam_/Cornell/CS7999/Macaulay Library Birds - Frames/'
-	save_path = os.getcwd() + '/alexnet_birdvid_results/' 
+	save_path = os.getcwd() + '/resnet_inat_results/' 
 
-	# Load pretrained Alexnet
-	alexnet = models.alexnet(pretrained=True)
+	# Load pretrained CNN
+	# model = models.vgg16(pretrained=True)		
+	# model = models.alexnet(pretrained=True)
+
+	# Loading Luming's pretrained Resnet
+	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+	resnet_path = os.path.join(os.getcwd(), 'model_train_sgd-lr_1e-01-gamma_1e-01-epoch_100-stage_2-decay_1e-03-bs_64-gpu_2.pth')
+	resnet = Transfer(num_channel=32, num_class=100, resnet=True)
+	model_state = torch.load(resnet_path, map_location=device)  #'cuda:0' for desktop
+	resnet.load_state_dict(model_state)
+	model = resnet
 
 	# Load imagenet labels as dictionary
-	# with open('D:/noam_/Cornell/CS7999/imagenet_class_index.json', 'r') as f:
-	# 	imagenet_labels = [line.strip() for line in f.readlines()]
 	with open('D:/noam_/Cornell/CS7999/imagenet_class_index.json', 'r') as f:
 		imagenet_labels = json.load(f)
 
-	# Transform for input images
-	transform = transforms.Compose([
-		transforms.Resize(256),			# images should be 256x256
-		transforms.CenterCrop(224),		# crop about the center to 224x224
-		transforms.ToTensor(),			# convert to Tensor
-		transforms.Normalize(
-			mean=[0.485, 0.456, 0.406],
-			std=[0.229, 0.224, 0.225]
-		)])
-	
-	# Test the image from iNaturalist
-	test_inat(image_path, save_path, alexnet, imagenet_labels, bbox=False)
-
+		# Transform for input images
+		transform = transforms.Compose([
+			transforms.Resize(256),			# images should be 256x256
+			transforms.CenterCrop(224),		# crop about the center to 224x224
+			transforms.ToTensor(),			# convert to Tensor
+			transforms.Normalize(
+				mean=[0.485, 0.456, 0.406],
+				std=[0.229, 0.224, 0.225]
+			)])
+		
+		# Test the image from iNaturalist
+		test_inat(image_path, save_path, model, imagenet_labels, n=0, bbox=False)
+		# use n=1 to get the top label, n=0 to save all labels
 	
