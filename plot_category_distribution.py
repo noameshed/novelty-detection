@@ -4,6 +4,7 @@ import numpy as np
 import os
 import seaborn as sns
 import matplotlib.pyplot as plt
+from collections import OrderedDict
 
 def get_categories(filename):
 	# Open the file with list of categories and the imagenet classes
@@ -11,9 +12,8 @@ def get_categories(filename):
 	# Return a dictionary of category names to the list of classes in the category
 	# and a reverse lookup dictionary
 
-	cat_to_lab = {}
-	lab_to_cat = {}
-	# TODO: Assert that there are 1000 classes
+	cat_to_lab = OrderedDict()
+	lab_to_cat = OrderedDict()
 	with open(filename) as csvfile:
 		freader = csv.reader(csvfile)
 		rownum = 0
@@ -38,29 +38,58 @@ def get_categories(filename):
 				lab_to_cat[l] = cat
 
 	return cat_to_lab, lab_to_cat
-			
+	
+def kurtosis(data):
+	"""
+	Compute the kurtosis for the given distribution
+	k = (SUM((Yi-Ybar)^4/N)/s^2)
+	"""
+	Y = np.array(data)
+	s = np.std(Y)
+	N = len(Y)
+	Ybar = np.mean(Y)
+
+	k = (np.sum(((Y-Ybar)**4)/N)/(s**4))
+	return k
+
+def entropy(data):
+	"""
+	Compute the Shannon entropy for the given distribution
+	H = -sum(Pi*log2*Pi)
+	"""
+	H = -np.sum((data*np.log2(data)))
+	return H
+
 def plotfig(ys, labels, title, savepath):
-	# Plot the most common labels by class
-	plt.figure()
-	ax = sns.scatterplot(range(len(ys)), ys)
-	plt.title(title)
-	plt.xlabel('Label Categories')
-	plt.ylabel('Label frequency')
-	plt.xticks(range(len(ys)))
-	ax.set_xticklabels(labels, rotation='vertical', fontsize=8)
+	# Plot the most common labels by category
+	if len(ys)>50:
+		plt.figure(figsize=[10,7])
+	elif len(ys)>75:
+		plt.figure(figsize=[13,7])
+	else:
+		plt.figure()
+
+	ax = sns.scatterplot(range(len(ys)), ys, zorder=2)
+	plt.title(title, fontsize=14)
+	plt.xlabel('Label Categories', fontsize=12)
+	plt.ylabel('Label frequency', fontsize=12)
+	ylocs, _ = plt.yticks()
+	plt.hlines(ylocs, xmin=0, xmax=len(labels)-1, colors='lightgrey', linestyles='dashed', zorder=1, linewidth=0.5)
+	plt.xticks(range(len(ys)), labels, rotation='vertical', fontsize=10)
+	plt.ylim(bottom=0)
 	plt.tight_layout()
 
 	#plt.show()
 	# Save resulting plot
 	fig = ax.get_figure()
-	fig.savefig(savepath)
+	fig.savefig(savepath, dpi=200)
 	plt.close()
 
 if __name__ == "__main__":
 	
 	# Create the category-label dictionaries
 	cat_to_lab, lab_to_cat = get_categories(os.getcwd() + '/imagenet_categories.csv')
-	savepath = os.getcwd() + '/plots_category_dist/'
+	savepath = os.getcwd() + '/plots_category_dist_alexnet/'
 
 	# Looking at the category distribution of CNN labels for a test class
 	with open(os.getcwd() + '/alexnet_inat_results/inat_results_top_choice.json') as f:
@@ -84,7 +113,7 @@ if __name__ == "__main__":
 				cnn_counts = cnn_results[curclass][c]['counts']
 
 				# Get categories for the labels of each image in the class
-				result_cats = []		# A non-unique list of the categories, e.g. [hat, but, hat, clothing]
+				result_cats = []		# A non-unique list of the categories, e.g. [hat, bug, hat, clothing]
 				if cnn_labels is None:
 					continue
 				for r in cnn_labels:
@@ -110,7 +139,7 @@ if __name__ == "__main__":
 					total_count[idx] += count
 				
 				# Sort in ascending order of frequency
-				order = np.argsort(result_cats_count)
+				order = np.argsort(result_cats_count)[::-1]
 				result_cats_unique = np.array(result_cats_unique)[order]
 				result_cats_count = np.array(result_cats_count)[order]
 				result_cats_freq = result_cats_count/sum(result_cats_count)
@@ -120,7 +149,7 @@ if __name__ == "__main__":
 
 			# Plot the most common labels by animal group
 			total_freq = total_count/sum(total_count)
-			order = np.argsort(total_freq)
+			order = np.argsort(total_freq)[::-1]
 			total_freq_sorted = np.array(total_freq)[order]
 			all_cats_sorted = np.array(all_cats)[order]
 			title = 'Average categories: '+curclass

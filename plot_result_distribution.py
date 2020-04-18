@@ -3,6 +3,8 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from collections import OrderedDict
+from tqdm import tqdm
 
 def plot_all_labels(data, title=None, save=None, showplot=False):
 	'''
@@ -14,45 +16,83 @@ def plot_all_labels(data, title=None, save=None, showplot=False):
 	imgs = data.keys()
 	all_labels = []
 	all_conf = []
-	for i in imgs:
-		toplabel = data[i]['labels'][-1]
-		toplabel_conf = float(data[i]['confs'][-1])
 
-		all_labels.append(toplabel)
-		all_conf.append(toplabel_conf)
+	# for i in imgs:			# Do all images
+	for i in np.random.choice(list(imgs), 50, replace=False):	# Select 50 random images
+		try:
+			toplabel = data[i]['labels'][-1]
+			toplabel_conf = float(data[i]['confs'][-1])
+
+			all_labels.append(toplabel)
+			all_conf.append(toplabel_conf)
+		except: 
+			pass
 	unique_labels = np.unique(all_labels)
 	all_labels = np.array(all_labels)
 	all_conf = np.array(all_conf)
 	
 	# Plot the chosen labels by their frequency
-	label_counts = {}
-	label_conf = {}
+	label_counts = OrderedDict()
+	label_conf = OrderedDict()
 	for l in unique_labels:		# Count the number of times this label has been selected
 		label_counts[l] = np.sum(all_labels == l)
 		conf = all_conf[all_labels==l]
 		avg_conf = sum(conf)/len(conf)
 		label_conf[l] = avg_conf
-
+	
 	# Plot
-	keys = np.array(list(label_counts.keys()))			# Labels
-	vals = np.array(list(label_counts.values()))		# Count of each label
-	freq = vals/sum(vals)												# Frequency of each label
+	labels = np.array(list(label_counts.keys()))			# Labels
+	count = np.array(list(label_counts.values()))		# Count of each label
+	freq = count/sum(count)								# Frequency of each label
 	confs = np.array(list(label_conf.values()))			# Confidence of each label
 	assert(label_conf.keys() == label_counts.keys())	
-	to_sort = np.argsort(vals)
-	colors = [[x/100, 0, 0] for x in confs[to_sort]]
+	to_sort = np.argsort(count)[::-1]
+	colors = [(x/100, 0, 0) for x in confs[to_sort]]
 
-	if len(to_sort) > 50:
-		plt.figure(figsize=[20,8])
+	k = kurtosis(freq[to_sort])
+	H = entropy(freq[to_sort])
+	title += ' (k=' + str(round(k,1)) + ', H=' + str(round(H,1)) + ')'
+	plotfig(range(len(labels)), freq[to_sort], labels[to_sort], colors, title, save)
+
+	return label_counts, label_conf, k, H
+
+def kurtosis(data):
+	"""
+	Compute the kurtosis for the given distribution
+	k = (SUM((Yi-Ybar)^4/N)/s^2)
+	"""
+	Y = np.array(data)
+	s = np.std(Y)
+	N = len(Y)
+	Ybar = np.mean(Y)
+
+	k = (np.sum(((Y-Ybar)**4)/N)/(s**4))
+	return k
+
+def entropy(data):
+	"""
+	Compute the Shannon entropy for the given distribution
+	H = -sum(Pi*log2*Pi)
+	"""
+	H = -np.sum((data*np.log2(data)))
+	return H
+
+
+def plotfig(xs, ys, labels, col, title, savepath):
+	if len(ys)>50:
+		plt.figure(figsize=[len(xs)*.15, 7])
 	else:
 		plt.figure()
-	plt.ylim((0,1.1))
-	plt.scatter(range(len(keys)), freq[to_sort], c=colors)
-	plt.xticks(np.arange(len(keys)), keys[to_sort], rotation=90, fontsize=10)
-	if title is not None:
-		plt.title(title)
-	plt.xlabel('Image Label', fontsize=14)
-	plt.ylabel('Label frequency', fontsize=14)
+
+	ax = plt.scatter(xs, ys, color=col, zorder=2)
+	plt.title(title, fontsize=14)
+	plt.xlabel('Label Categories', fontsize=12)
+	plt.ylabel('Label frequency', fontsize=12)
+
+	ylocs, _ = plt.yticks()
+	plt.hlines(ylocs, xmin=0, xmax=len(labels), colors='lightgrey', linestyles='dashed', zorder=1, linewidth=0.5)
+	plt.xticks(np.arange(len(labels)), labels, rotation='vertical', fontsize=7)
+	plt.ylim(bottom=0)
 	plt.tight_layout()
 
 	# Add confidence numbers
@@ -63,46 +103,70 @@ def plot_all_labels(data, title=None, save=None, showplot=False):
 	# 				fontsize='x-small',
 	# 				rotation=0)
 
-	if showplot:
-		plt.show()
 
-	if save is not None:
-			plt.savefig(save)
-
+	plt.savefig(savepath, dpi=200)
 	plt.close()
-	return plt
-
 
 if __name__ == "__main__":
-	path = os.getcwd() + '/alexnet_birdvid_results/'
-	savepath = 'C:/Users/noam_/Documents/Cornell/CS7999/3_3_2020/inaturalist_label_distributions/'
+	savepath = os.getcwd() + '/plots_label_dist_alexnet/Aves_50picsperclass/'
+	basepath = os.getcwd() + '/alexnet_inat_results/Aves/'
 
-	# To plot the video results
-	# for species in os.listdir(path):
-	# 	# Load the results of testing the video frames
-	# 	for results in os.listdir(path + species + '/'):
-	# 		with open(path + species + '/' + results, 'r') as f:
-	# 			f = json.load(f)
-	# 			# for each video or set of images, plot the distribution of top 1 labels
-	# 			title = "Label distribution for "+species
-				
-	# 			plot_all_labels(f, save=savepath+species+'.jpg', title=title)
+	total_count_dict = OrderedDict()
+	total_conf_dict = OrderedDict()
 
-	# Plot the results from iNaturalist only of the birds also in the videos
-	with open('vids_to_split.txt', 'r') as f:
-		i=1
-		for line in f:
-			splitline = line.strip().split('\t')
-			ID = int(splitline[0])
-			latin_name = splitline[1]
-			name = splitline[2]
+	all_distros = {}
+	# Plot the results from iNaturalist birds
+	for fname in tqdm(os.listdir(basepath)):
+		with open(basepath+fname, 'r') as f:
 
-			files = os.listdir(os.getcwd()+'/alexnet_inat_results/Aves/')
+			f = json.load(f)
 
-			with open(os.getcwd()+'/alexnet_inat_results/Aves/'+latin_name+'.json', 'r') as f:
-				f = json.load(f)
-				title = "Label distribution for "+name
-				plot_all_labels(f, save=savepath+name+'.jpg', title=title)
+			# Optionally, skip any classes with under 50 images
+			if len(f.keys())<50:
+				continue
+
+			name = fname.split('.')[0]
+			all_distros[name] = {}		# Stores label distribution, kurtosis, and entropy
+			title = "Label distribution, "+name
+
+			label_counts, label_confs, k, H = plot_all_labels(f, save=savepath+'/plots/'+name+'.jpg', title=title)
+
+			# Store information about the distribution
+			all_distros[name]['labels'] = list(label_counts.keys())
+			all_distros[name]['counts'] = [int(i) for i in label_counts.values()]
+			all_distros[name]['confs'] = [float(i) for i in label_confs.values()]
+			all_distros[name]['kurtosis'] = str(k)
+			all_distros[name]['entropy'] = str(H)
 			
-			
+			for l in label_counts.keys():
+				if l not in total_count_dict.keys():
+					total_count_dict[l] = 0
+					total_conf_dict[l] = []
+				total_count_dict[l] += label_counts[l]
+				total_conf_dict[l].append(label_confs[l])
+
+	# Save distribution data as json
+	with open(savepath+'Aves_distros.json', 'w') as outfile:
+		json.dump(all_distros, outfile)
+
+	# Get the overall distribution for the entire category (e.g. Aves)
+	total_count = list(total_count_dict.values())
+	all_labels = list(total_count_dict.keys())
+	all_freq = total_count/sum(total_count)
+	
+	# Get average confidence per label
+	all_conf = []
+	for c in total_conf_dict.keys():
+		conflist = total_conf_dict[c]
+		all_conf.append(sum(conflist)/len(conflist))
+	
+	# Sort by decreasing frequency
+	order = np.argsort(all_freq)[::-1]
+	all_freq_sorted = np.array(all_freq)[order]
+	all_conf_sorted = np.array(all_conf)[order]
+	all_labels_sorted = np.array(all_labels)[order]
+	colors = [[x/100, 0, 0] for x in all_conf_sorted]
+
+	# Plot the label distribution for the entire category
+	plotfig(range(len(all_freq_sorted)), all_freq_sorted, all_labels_sorted, colors, title, os.getcwd()+'Aves.jpg')
 
