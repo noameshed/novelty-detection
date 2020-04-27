@@ -17,8 +17,8 @@ def plot_all_labels(data, title=None, save=None, showplot=False):
 	all_labels = []
 	all_conf = []
 
-	# for i in imgs:			# Do all images
-	for i in np.random.choice(list(imgs), 50, replace=False):	# Select 50 random images
+	for i in imgs:			# Do all images
+	# for i in np.random.choice(list(imgs), 50, replace=False):	# Select 50 random images
 		try:
 			toplabel = data[i]['labels'][-1]
 			toplabel_conf = float(data[i]['confs'][-1])
@@ -37,11 +37,11 @@ def plot_all_labels(data, title=None, save=None, showplot=False):
 	for l in unique_labels:		# Count the number of times this label has been selected
 		label_counts[l] = np.sum(all_labels == l)
 		conf = all_conf[all_labels==l]
-		avg_conf = sum(conf)/len(conf)
+		avg_conf = np.mean(conf)
 		label_conf[l] = avg_conf
 	
 	# Plot
-	labels = np.array(list(label_counts.keys()))			# Labels
+	labels = np.array(list(label_counts.keys()))		# Labels
 	count = np.array(list(label_counts.values()))		# Count of each label
 	freq = count/sum(count)								# Frequency of each label
 	confs = np.array(list(label_conf.values()))			# Confidence of each label
@@ -51,7 +51,7 @@ def plot_all_labels(data, title=None, save=None, showplot=False):
 
 	k = kurtosis(freq[to_sort])
 	H = entropy(freq[to_sort])
-	title += ' (k=' + str(round(k,1)) + ', H=' + str(round(H,1)) + ')'
+	# title += ' (k=' + str(round(k,1)) + ', H=' + str(round(H,1)) + ')'
 	plotfig(range(len(labels)), freq[to_sort], labels[to_sort], colors, title, save)
 
 	return label_counts, label_conf, k, H
@@ -66,7 +66,7 @@ def kurtosis(data):
 	N = len(Y)
 	Ybar = np.mean(Y)
 
-	k = (np.sum(((Y-Ybar)**4)/N)/(s**4))
+	k = (np.sum(((Y-Ybar)**4)/N)/(1e-15 + s**4))
 	return k
 
 def entropy(data):
@@ -85,14 +85,14 @@ def plotfig(xs, ys, labels, col, title, savepath):
 		plt.figure()
 
 	ax = plt.scatter(xs, ys, color=col, zorder=2)
-	plt.title(title, fontsize=14)
-	plt.xlabel('Label Categories', fontsize=12)
-	plt.ylabel('Label frequency', fontsize=12)
+	plt.title(title, fontsize=12)
+	plt.xlabel('Label Categories', fontsize=10)
+	plt.ylabel('Label frequency', fontsize=10)
 
+	plt.ylim(bottom=0, top=1.0)
 	ylocs, _ = plt.yticks()
-	plt.hlines(ylocs, xmin=0, xmax=len(labels), colors='lightgrey', linestyles='dashed', zorder=1, linewidth=0.5)
-	plt.xticks(np.arange(len(labels)), labels, rotation='vertical', fontsize=7)
-	plt.ylim(bottom=0)
+	plt.hlines(np.arange(0,1.0, 0.1), xmin=0, xmax=len(labels), colors='lightgrey', linestyles='dashed', zorder=1, linewidth=0.5)
+	plt.xticks(np.arange(len(labels)), labels, rotation='vertical', fontsize=8)
 	plt.tight_layout()
 
 	# Add confidence numbers
@@ -108,7 +108,7 @@ def plotfig(xs, ys, labels, col, title, savepath):
 	plt.close()
 
 if __name__ == "__main__":
-	savepath = os.getcwd() + '/plots_label_dist_alexnet/Aves_50picsperclass/'
+	savepath = os.getcwd() + '/plots_label_dist_alexnet/Aves/'
 	basepath = os.getcwd() + '/alexnet_inat_results/Aves/'
 
 	total_count_dict = OrderedDict()
@@ -122,8 +122,8 @@ if __name__ == "__main__":
 			f = json.load(f)
 
 			# Optionally, skip any classes with under 50 images
-			if len(f.keys())<50:
-				continue
+			# if len(f.keys())<50:
+			# 	continue
 
 			name = fname.split('.')[0]
 			all_distros[name] = {}		# Stores label distribution, kurtosis, and entropy
@@ -132,9 +132,10 @@ if __name__ == "__main__":
 			label_counts, label_confs, k, H = plot_all_labels(f, save=savepath+'/plots/'+name+'.jpg', title=title)
 
 			# Store information about the distribution
-			all_distros[name]['labels'] = list(label_counts.keys())
-			all_distros[name]['counts'] = [int(i) for i in label_counts.values()]
-			all_distros[name]['confs'] = [float(i) for i in label_confs.values()]
+			order = np.argsort(list(label_counts.values()))[::-1]
+			all_distros[name]['labels'] = list(np.array(list(label_counts.keys()))[order])
+			all_distros[name]['counts'] = [int(i) for i in np.array(list(label_counts.values()))[order]]
+			all_distros[name]['confs'] = [float(i) for i in np.array(list(label_confs.values()))[order]]
 			all_distros[name]['kurtosis'] = str(k)
 			all_distros[name]['entropy'] = str(H)
 			
@@ -168,5 +169,6 @@ if __name__ == "__main__":
 	colors = [[x/100, 0, 0] for x in all_conf_sorted]
 
 	# Plot the label distribution for the entire category
-	plotfig(range(len(all_freq_sorted)), all_freq_sorted, all_labels_sorted, colors, title, os.getcwd()+'Aves.jpg')
+	title='Top 50 Labels - Aves'
+	plotfig(range(len(all_freq_sorted))[:50], all_freq_sorted[:50], all_labels_sorted[:50], colors[:50], title, savepath+'Aves.jpg')
 
