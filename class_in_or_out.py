@@ -56,10 +56,10 @@ def avg_distribution(data, n, dic):
 	std_freq = np.std(class_freq, axis=0)
 
 	# Get average confidence and frequency of top labels
-	class_confs = np.sum(class_confs, axis=0)/class_confs.shape[0]
-	class_freq = np.sum(class_freq, axis=0)/class_freq.shape[0]
+	class_confs_avg = np.sum(class_confs, axis=0)/class_confs.shape[0]
+	class_freq_avg = np.sum(class_freq, axis=0)/class_freq.shape[0]
 
-	return class_confs, class_freq, std_confs, std_freq
+	return class_confs_avg, class_freq_avg, std_confs, std_freq
 
 def print_error_stats(err, avgs, n):
 	mins = err[0,:]
@@ -132,17 +132,17 @@ if __name__ == '__main__':
 		n = 10
 		# Set up plot
 		plt.figure()
-		plt.xticks(np.arange(0,-1))
-		message = 'Top ' + str(n) + ' labels (' + str(n) + 'th to 1st most common)'
+		plt.xticks(np.arange(0,10), labels=np.arange(1,11))	#np.arange(0,-1))
+		message = 'Top ' + str(n) + ' labels'
 		plt.xlabel(message)
 		plt.ylabel('Label Frequency (%)')
-		plt.title('Birds: Label frequency for in vs out class')
+		plt.title('Aves: Label Distribution by ImageNet Relationship')
 
 		# Plot the distribution for the top n labels split by group (in, not in, par, rel)
 		for data in [is_in, not_in, rels, par]:
 			class_confs, class_freq, std_confs, std_freq = avg_distribution(data, n, f)	
-			plt.errorbar(np.arange(n), class_freq, std_freq, elinewidth=0.5, capsize = 2)
+			plt.errorbar(np.arange(n), class_freq[::-1], std_freq[::-1], elinewidth=0.5, capsize = 2)
 
-		plt.legend(['In Imagenet','Not In Imagenet','Relative In Imagenet','Parent In Imagenet'], loc='upper left')
+		plt.legend(['In Imagenet','Not In Imagenet','Relative In Imagenet','Parent In Imagenet'], loc='upper right')
 		# plt.legend(['In Imagenet','Not In Imagenet', 'Parents + Relatives'], loc='upper left')
 		plt.show()
