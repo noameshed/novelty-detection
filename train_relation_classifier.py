@@ -117,7 +117,7 @@ def split_data(X, Y, XClasses):
 	
 	# Split the data
 	# X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=42)	# Split by image
-	X_train_ids, X_test_ids, Y_train_ids, Y_test_ids = train_test_split(classIDs, classIDs, test_size=0.33, random_state=42)		# Split by class
+	X_train_ids, X_test_ids, Y_train_ids, Y_test_ids = train_test_split(classIDs, classIDs, test_size=0.4, random_state=42)		# Split by class
 	X_train = []
 	X_test = []
 	Y_train = []
@@ -129,18 +129,18 @@ def split_data(X, Y, XClasses):
 		for i in im_idxs[0]:
 			X_train.append(X[i])
 			Y_train.append(Y[i])
-			train_imgs.append(img_names[i])
+			# train_imgs.append(img_names[i])
 	for idx in X_test_ids:	# For each class, save the features in X and labels in Y
 		im_idxs = np.where(XClasses==idx)
 		for i in im_idxs[0]:
 			X_test.append(X[i])
 			Y_test.append(Y[i])
-			test_imgs.append(img_names[i])
+			# test_imgs.append(img_names[i])
 
 	# print(len(X_train), len(X_train[0]), len(Y_train))
-	assert(len(test_imgs) == len(X_test) and len(train_imgs) == len(X_train))
+	# assert(len(test_imgs) == len(X_test) and len(train_imgs) == len(X_train))
 
-	return X_train, X_test, Y_train, Y_test, train_imgs, test_imgs
+	return X_train, X_test, Y_train, Y_test#, train_imgs, test_imgs
 
 def combine_to_superclasses(X, X_classes, imagenet_labels):
 	'''
@@ -207,7 +207,7 @@ if __name__ == '__main__':
 	Y_table_index = []
 	img_names = []
 	l_sorted = []
-	'''
+	
 	### Uses distribution of top n labels as feature vectors
 	with open('alexnet_inat_results/inat_results_top_choice.json', 'r') as f:
 		f = json.load(f)
@@ -218,8 +218,9 @@ if __name__ == '__main__':
 			if vec is None:
 				continue
 			X.append(list(vec))
-			Y.append(row['Relation to Imagenet'])
-	'''
+			Y_imagenet_relation.append(row['Relation to Imagenet'])
+			Y_table_index.append(i)
+	"""
 	### Uses confidence vectors as feature vectors - looks at separate files, not large json
 	for i in labeled_data.index:
 		row = df.iloc[i]
@@ -248,7 +249,7 @@ if __name__ == '__main__':
 				Y_imagenet_relation.append(row['Relation to Imagenet'])
 				Y_table_index.append(i)
 				img_names.append(im)
-
+	"""
 	X = np.array(X)
 	Y_imagenet_relation = np.array(Y_imagenet_relation)
 	# print(X.shape, Y_imagenet_relation.shape, np.array(X_classes).shape)
@@ -257,29 +258,44 @@ if __name__ == '__main__':
 	# X = combine_to_superclasses(X, X_classes, l_sorted)
 
 	# Split data
-	X_train, X_test, Y_train, Y_test, train_imgs, test_imgs = split_data(X, Y_imagenet_relation, Y_table_index)
+	print('DATA SIZES', len(X), len(Y_imagenet_relation))
+	X_train, X_test, Y_train, Y_test = split_data(X, Y_imagenet_relation, Y_table_index)
+	# X_train, X_test, Y_train, Y_test, train_imgs, test_imgs = split_data(X, Y_imagenet_relation, Y_table_index)
+
+	# Subsample the training data so we are training on equal numbers for each category
+	in_idxs = np.argwhere(np.array(Y_train)=='in imagenet')
+	notin_idxs = np.random.choice(np.argwhere(np.array(Y_train)=='not in imagenet').flatten(), len(in_idxs), replace=False)
+	par_idxs = np.random.choice(np.argwhere(np.array(Y_train)=='parent in imagenet').flatten(), len(in_idxs), replace=False)
+	rel_idxs = np.random.choice(np.argwhere(np.array(Y_train)=='relative in imagenet').flatten(), len(in_idxs), replace=False)
+
+	samples = len(in_idxs)
+	print('TRAINING IMS IN IMAGENET',samples)
 	
+	# Combine all indices for training subset
+	idxs = np.sort(np.concatenate((in_idxs.flatten(), notin_idxs.flatten(), par_idxs.flatten(), rel_idxs.flatten())))
+	X_train_subset = [X_train[i] for i in idxs]
+	Y_train_subset = [Y_train[i] for i in idxs]
 	
 	# Train linear classifier
-	clf_svc = SVC(tol=1e-3, random_state=True,class_weight='balanced')
-	clf_svc.fit(X_train, Y_train)
+	clf_svc = SVC(tol=1e-3, random_state=True, class_weight='balanced')
+	clf_svc.fit(X_train_subset, Y_train_subset)
 	preds_svc = clf_svc.predict(X_test)
 	print('SVM:', clf_svc.score(X_test, Y_test))
 
 	# Save SVM results:
-	if save_path is not None:
-		with open(save_path+species+'_svm_results.txt', 'w') as f:
-			f.write('ImageID\t Actual\t Prediction\n')
-			for i, p in enumerate(preds_svc):
-				line = test_imgs[i]+'\t'+Y_test[i]+'\t'+p+'\n'
-				f.write(line)
+	# if save_path is not None:
+	# 	with open(save_path+species+'_svm_results.txt', 'w') as f:
+	# 		f.write('ImageID\t Actual\t Prediction\n')
+	# 		for i, p in enumerate(preds_svc):
+	# 			line = test_imgs[i]+'\t'+Y_test[i]+'\t'+p+'\n'
+	# 			f.write(line)
 	
 
 	# # Train Random Forest Classifier
-	# clf_rf = RandomForestClassifier(n_estimators=100,class_weight='balanced')
-	# clf_rf.fit(X_train, Y_train)
-	# preds_rf = clf_rf.predict(X_test)
-	# print('Random Forest:', clf_rf.score(X_test, Y_test))
+	clf_rf = RandomForestClassifier(n_estimators=100,class_weight='balanced')
+	clf_rf.fit(X_train, Y_train)
+	preds_rf = clf_rf.predict(X_test)
+	print('Random Forest:', clf_rf.score(X_test, Y_test))
 	
 	# # Save RF results:
 	# if save_path is not None:
@@ -291,8 +307,8 @@ if __name__ == '__main__':
 
 	# Plot confusion matrices
 	classes = ['relative in imagenet', 'in imagenet', 'parent in imagenet', 'not in imagenet']
-	title = 'CM for SVM, features=top conf. value per image'
+	title = 'ImageNet Relationship Classifier (SVM) - Aves'
 	plot_confusion_matrix(Y_test, preds_svc, classes, normalize=True, title=title)
-	# title = 'CM for RF, features=top conf. value per image'
-	# plot_confusion_matrix(Y_test, preds_rf, classes, normalize=True, title=title)
+	title = 'ImageNet Relationship Classifier (RF) - Aves'
+	plot_confusion_matrix(Y_test, preds_rf, classes, normalize=True, title=title)
 	
