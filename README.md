@@ -1,5 +1,19 @@
 # novelty-detection
-Seeing how CNNs respond to unknown classes
+Analyzing how AlexNet responds to novel classes with varying degrees of similarity to pretrained classes from ImageNet.
+
+If you find this work helpful in your research, please cite:
+
+Eshed, N. (2020). _Novelty detection and analysis in convolutional neural networks_ (Accession No. 27994027)[Master's thesis, Cornell University]. ProQuest Dissertations & Theses Global.
+
+```
+@mastersthesis{eshed_novelty_detection,
+  author={Noam Eshed},
+  title={Novelty detection and analysis in convolutional neural networks},
+  school={Cornell University},
+  year={2020},
+  publisher={ProQuest Dissertations & Theses Global}
+}
+```
 
 ## Data
 ### in_out_class.csv
